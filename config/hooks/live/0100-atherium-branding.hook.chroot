@@ -1,0 +1,65 @@
+#!/bin/sh
+# Se ejecuta dentro del chroot al construir la ISO.
+set -e
+
+# ---- Identidad del sistema: Atherium ----
+cat > /etc/os-release <<'EOF'
+PRETTY_NAME="Atherium"
+NAME="Atherium"
+VERSION_ID="1.0"
+VERSION="1.0 (Nebula)"
+VERSION_CODENAME=nebula
+ID=atherium
+ID_LIKE=debian
+HOME_URL="https://github.com/galaxiumos"
+SUPPORT_URL="https://github.com/galaxiumos"
+BUG_REPORT_URL="https://github.com/galaxiumos"
+EOF
+
+echo "Atherium 1.0 \\n \\l" > /etc/issue
+echo "Atherium 1.0" > /etc/issue.net
+cat > /etc/lsb-release <<'EOF'
+DISTRIB_ID=Atherium
+DISTRIB_RELEASE=1.0
+DISTRIB_CODENAME=nebula
+DISTRIB_DESCRIPTION="Atherium 1.0"
+EOF
+
+echo "atherium" > /etc/hostname
+
+# ---- Neofetch: configuracion global para cualquier usuario ----
+mkdir -p /etc/neofetch
+cp /etc/skel/.config/neofetch/config.conf /etc/neofetch/config.conf || true
+
+# ---- Valores por defecto de dconf (plank, GTK) ----
+if command -v dconf >/dev/null 2>&1; then
+    mkdir -p /etc/dconf/profile
+    printf 'user-db:user\nsystem-db:local\n' > /etc/dconf/profile/user
+    dconf update || true
+fi
+
+# ---- Greeter de LightDM ----
+mkdir -p /etc/lightdm/lightdm-gtk-greeter.conf.d
+cat > /etc/lightdm/lightdm-gtk-greeter.conf.d/50-atherium.conf <<'EOF'
+[greeter]
+background=/usr/share/backgrounds/atherium/wallpaper.png
+theme-name=Materia-dark-compact
+icon-theme-name=Papirus-Dark
+font-name=Noto Sans 11
+indicators=~host;~spacer;~clock;~spacer;~session;~a11y;~power
+position=50%,center
+EOF
+
+# ---- Permisos de scripts ----
+chmod +x /usr/local/bin/atherium-session-init 2>/dev/null || true
+
+# ---- Shell: neofetch al abrir una terminal interactiva ----
+cat >> /etc/skel/.bashrc <<'EOF'
+
+# Atherium: mostrar el logo al abrir la terminal
+if [ -t 1 ] && command -v neofetch >/dev/null 2>&1 && [ -z "$ATHERIUM_NEOFETCH_SHOWN" ]; then
+    export ATHERIUM_NEOFETCH_SHOWN=1
+    neofetch
+fi
+alias ll='ls -lah --color=auto'
+EOF

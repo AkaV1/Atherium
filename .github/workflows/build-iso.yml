@@ -1,0 +1,42 @@
+name: Build Atherium ISO
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    container:
+      image: debian:trixie
+      options: --privileged
+    permissions:
+      contents: write
+    steps:
+      - name: Instalar git
+        run: apt-get update && apt-get install -y git ca-certificates
+
+      - uses: actions/checkout@v4
+
+      - name: Compilar ISO
+        run: ./build.sh
+
+      - name: Subir ISO como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: atherium-iso
+          path: |
+            atherium-*.iso
+            atherium-*.iso.sha256
+            build.log
+
+      - name: Publicar release (solo en tags)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            atherium-*.iso
+            atherium-*.iso.sha256

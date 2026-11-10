@@ -1,0 +1,22 @@
+#!/bin/sh
+# Atherium - configuracion de live-build (base: Debian 13 "trixie")
+set -e
+
+lb config noauto \
+    --distribution trixie \
+    --architectures amd64 \
+    --linux-flavours amd64 \
+    --archive-areas "main contrib non-free non-free-firmware" \
+    --binary-images iso-hybrid \
+    --debian-installer live \
+    --debian-installer-gui true \
+    --security true \
+    --updates true \
+    --apt-recommends true \
+    --memtest none \
+    --iso-application "Atherium" \
+    --iso-publisher "Atherium; https://github.com/galaxiumos" \
+    --iso-volume "ATHERIUM" \
+    --image-name "atherium" \
+    --bootappend-live "boot=live components quiet splash username=atherium hostname=atherium locales=es_MX.UTF-8 keyboard-layouts=latam timezone=America/Mazatlan" \
+    "${@}"
