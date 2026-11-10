@@ -27,6 +27,22 @@ EOF
 
 echo "atherium" > /etc/hostname
 
+# ---- Neofetch (no esta en los repos de Debian 13) ----
+# Se descarga la version 7.1.0 (MIT). Si falla, se crea un respaldo con fastfetch.
+if curl -fsSL --retry 3 -o /usr/local/bin/neofetch \
+    https://raw.githubusercontent.com/dylanaraps/neofetch/7.1.0/neofetch \
+    && head -n1 /usr/local/bin/neofetch | grep -q bash; then
+    chmod 755 /usr/local/bin/neofetch
+else
+    echo "AVISO: no se pudo descargar neofetch, usando fastfetch" >&2
+    sed 's/\${c[0-9]}//g' /etc/atherium/logo.ascii > /etc/atherium/logo.plain
+    cat > /usr/local/bin/neofetch <<'EOF'
+#!/bin/sh
+exec fastfetch --logo-type file-raw --logo /etc/atherium/logo.plain "$@"
+EOF
+    chmod 755 /usr/local/bin/neofetch
+fi
+
 # ---- Neofetch: configuracion global para cualquier usuario ----
 mkdir -p /etc/neofetch
 cp /etc/skel/.config/neofetch/config.conf /etc/neofetch/config.conf || true
@@ -43,7 +59,7 @@ mkdir -p /etc/lightdm/lightdm-gtk-greeter.conf.d
 cat > /etc/lightdm/lightdm-gtk-greeter.conf.d/50-atherium.conf <<'EOF'
 [greeter]
 background=/usr/share/backgrounds/atherium/wallpaper.png
-theme-name=Materia-dark-compact
+theme-name=Arc-Dark
 icon-theme-name=Papirus-Dark
 font-name=Noto Sans 11
 indicators=~host;~spacer;~clock;~spacer;~session;~a11y;~power

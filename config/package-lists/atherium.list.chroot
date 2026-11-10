@@ -22,14 +22,14 @@ plank
 picom
 
 # --- Tema, iconos y fuentes ---
-materia-gtk-theme
+arc-theme
 papirus-icon-theme
 fonts-noto
 fonts-noto-color-emoji
 fonts-firacode
 
 # --- Terminal / neofetch ---
-neofetch
+# neofetch ya no esta en Debian 13: el hook lo descarga; fastfetch es el respaldo
 fastfetch
 bash-completion
 htop
