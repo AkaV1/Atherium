@@ -63,8 +63,10 @@ else
     echo "AVISO: no se pudo instalar WhiteSur-icon-theme, se usa Papirus-Dark" >&2
 fi
 
+# El instalador necesita USER y TERM (en el chroot no existen y salia en silencio)
 if git clone --depth 1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$WORK/gtk" \
-    && (cd "$WORK/gtk" && env USER=root LOGNAME=root HOME=/root ./install.sh -d /usr/share/themes -c Dark -o normal < /dev/null) \
+    && (cd "$WORK/gtk" && env USER=root LOGNAME=root HOME=/root TERM=xterm-256color \
+        bash -x ./install.sh -d /usr/share/themes -c Dark -o normal < /dev/null > "$WORK/gtk.log" 2>&1) \
     && [ -d /usr/share/themes/WhiteSur-Dark ]; then
     GTK_THEME="WhiteSur-Dark"
     if [ -d /usr/share/themes/WhiteSur-Dark/xfwm4 ]; then
@@ -72,6 +74,7 @@ if git clone --depth 1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$W
     fi
 else
     echo "AVISO: no se pudo instalar WhiteSur-gtk-theme, se usa Arc-Dark" >&2
+    [ -f "$WORK/gtk.log" ] && { echo "--- ultimas lineas del instalador ---" >&2; tail -n 40 "$WORK/gtk.log" >&2; }
 fi
 
 if git clone --depth 1 https://github.com/vinceliuice/WhiteSur-cursors.git "$WORK/cursors" \
