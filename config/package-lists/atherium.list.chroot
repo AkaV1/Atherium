@@ -22,9 +22,10 @@ dconf-cli
 xdg-user-dirs-gtk
 
 # --- Arranque live e instalador ---
-casper
+live-boot
+live-config
 calamares
-calamares-settings-ubuntu-common
+calamares-settings-debian
 
 # --- Tema, iconos y fuentes (Yaru queda como respaldo de WhiteSur) ---
 yaru-theme-gtk
