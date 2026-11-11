@@ -1,11 +1,11 @@
 [net/launchpad/plank/docks/dock1]
 position='bottom'
-theme='Transparent'
+theme='Atherium'
 alignment='center'
-icon-size=52
+icon-size=48
 zoom-enabled=true
-zoom-percent=150
-hide-mode='window-dodge'
+zoom-percent=125
+hide-mode='none'
 items-alignment='center'
 pressure-reveal=false
 dock-items=['thunar.dockitem', 'firefox-esr.dockitem', 'xfce4-terminal.dockitem', 'mousepad.dockitem', 'xfce4-settings-manager.dockitem']

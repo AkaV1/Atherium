@@ -54,6 +54,26 @@ if command -v dconf >/dev/null 2>&1; then
     dconf update || true
 fi
 
+# ---- Tema de ventanas "Atherium" (botones ▲ ▼ ◆ minimalistas) ----
+# Se parte del tema xfwm4 de Arc-Dark y se sustituyen los botones.
+if [ -d /usr/share/themes/Arc-Dark/xfwm4 ]; then
+    mkdir -p /usr/share/themes/Atherium
+    rm -rf /usr/share/themes/Atherium/xfwm4
+    cp -r /usr/share/themes/Arc-Dark/xfwm4 /usr/share/themes/Atherium/xfwm4
+    cd /usr/share/themes/Atherium/xfwm4
+    rm -f close-* hide-* maximize-* maximize-toggled-*
+    cp /usr/share/atherium/xfwm4-buttons/* .
+    # Texto del titulo discreto
+    for k in active_text_color inactive_text_color; do
+        sed -i "/^$k=/d" themerc
+    done
+    printf 'active_text_color=#c9d1ff\ninactive_text_color=#7a82b0\n' >> themerc
+    cd /
+else
+    echo "AVISO: no se encontro Arc-Dark/xfwm4, se usara su tema de ventanas" >&2
+    sed -i 's|value="Atherium"/>|value="Arc-Dark"/>|' /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
+fi
+
 # ---- Greeter de LightDM ----
 mkdir -p /etc/lightdm/lightdm-gtk-greeter.conf.d
 cat > /etc/lightdm/lightdm-gtk-greeter.conf.d/50-atherium.conf <<'EOF'
