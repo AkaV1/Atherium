@@ -39,6 +39,9 @@ git
 sudo
 nano
 
+# --- Maquinas virtuales (ajuste de resolucion y portapapeles) ---
+spice-vdagent
+
 # --- Red y audio ---
 network-manager
 network-manager-gnome

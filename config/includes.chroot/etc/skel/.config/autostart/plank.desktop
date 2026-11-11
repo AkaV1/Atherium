@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Plank
+Comment=Dock de Atherium
+Exec=sh -c "sleep 3; exec plank"
+X-GNOME-Autostart-enabled=true
+NoDisplay=true

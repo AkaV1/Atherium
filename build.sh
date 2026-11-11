@@ -21,6 +21,13 @@ apt-get install -y --no-install-recommends \
 echo "==> Limpiando compilaciones previas"
 lb clean --purge || true
 
+echo "==> Registrando version de la compilacion"
+SHA="${GITHUB_SHA:-$(git rev-parse HEAD 2>/dev/null || echo local)}"
+SHA="$(echo "$SHA" | cut -c1-7)"
+mkdir -p config/includes.chroot/etc/atherium
+printf 'commit=%s\nfecha=%s\n' "$SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    > config/includes.chroot/etc/atherium/build-info
+
 echo "==> Configurando"
 chmod +x auto/config
 lb config
@@ -34,7 +41,7 @@ if [ -z "$ISO" ]; then
     exit 1
 fi
 
-NEW="atherium-$(date +%Y.%m.%d)-amd64.iso"
+NEW="atherium-$(date +%Y.%m.%d)-${SHA}-amd64.iso"
 mv "$ISO" "$NEW"
 sha256sum "$NEW" > "$NEW.sha256"
 
