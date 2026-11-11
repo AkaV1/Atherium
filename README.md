@@ -33,7 +33,7 @@ sudo ./build.sh
 qemu-system-x86_64 -m 4G -enable-kvm -cdrom atherium-*.iso -boot d
 ```
 
-Usuario live: `atherium` (sin contraseña en la sesión live).
+Usuario live: `atherium`, contraseña `live` (la sesión live entra sola y `sudo` no la pide). Al instalar con Calamares defines tu propio usuario y contraseña.
 
 ## Personalizar
 
