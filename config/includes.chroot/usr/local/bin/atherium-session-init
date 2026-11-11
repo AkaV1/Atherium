@@ -1,0 +1,51 @@
+#!/bin/sh
+# Atherium: arranca el compositor (transparencias) y despues el dock.
+# Se lanza desde ~/.config/autostart/atherium-session.desktop
+
+CONF="$HOME/.config/picom/picom.conf"
+LITE="$HOME/.config/picom/picom-lite.conf"
+LOG="$HOME/.cache/atherium-session.log"
+mkdir -p "$HOME/.cache"
+: > "$LOG"
+
+pkill -x picom 2>/dev/null
+pkill -x plank 2>/dev/null
+
+# El compositor propio de xfwm4 puede chocar con picom
+xfconf-query -c xfwm4 -p /general/use_compositing -s false 2>/dev/null
+
+picom_ok() {
+    sleep 3
+    pgrep -x picom >/dev/null 2>&1
+}
+
+started=""
+
+# En maquinas virtuales GLX suele fallar o ir lento: se usa el modo ligero (sin blur)
+if systemd-detect-virt -q 2>/dev/null; then
+    echo "VM detectada: usando picom-lite (xrender)" >> "$LOG"
+    picom --config "$LITE" >>"$LOG" 2>&1 &
+    picom_ok && started="lite"
+else
+    picom --config "$CONF" --backend glx >>"$LOG" 2>&1 &
+    if picom_ok; then
+        started="glx"
+    else
+        echo "picom glx fallo, probando xrender" >> "$LOG"
+        picom --config "$LITE" >>"$LOG" 2>&1 &
+        picom_ok && started="lite"
+    fi
+fi
+
+# Ultimo recurso: compositor de xfwm4 (transparencias basicas, sin blur)
+if [ -z "$started" ]; then
+    echo "picom no arranco, usando el compositor de xfwm4" >> "$LOG"
+    xfconf-query -c xfwm4 -p /general/use_compositing -n -t bool -s true 2>/dev/null \
+        || xfconf-query -c xfwm4 -p /general/use_compositing -s true 2>/dev/null
+    sleep 1
+fi
+
+echo "compositor: ${started:-xfwm4}" >> "$LOG"
+
+# Dock: despues del compositor para que pueda dibujar con transparencia
+exec plank
