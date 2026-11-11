@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Atherium Session
-Comment=Compositor y dock de Atherium
-Exec=/usr/local/bin/atherium-session-init
-X-GNOME-Autostart-enabled=true
-NoDisplay=true

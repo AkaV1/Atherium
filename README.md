@@ -1,25 +1,25 @@
 # Atherium
 
-Sistema operativo basado en **Debian 13 (trixie)** con escritorio **XFCE** moderno y semitransparente, dock inferior (Plank) y logo ASCII propio en `neofetch`.
+Sistema operativo basado en **Ubuntu 24.04 LTS (noble)** con escritorio **GNOME** estilo macOS, dock inferior transparente y el logo de Atherium como icono de inicio.
 
 ## Características
 
-- XFCE con tema oscuro **WhiteSur** (estilo macOS) con iconos y cursores WhiteSur
-- Ventanas translúcidas (compositor de xfwm4; en hardware real picom con blur y esquinas redondeadas)
-- Dock **Plank** centrado en la parte inferior (zoom al pasar el cursor)
-- Panel superior semitransparente
-- Terminal translúcida con paleta galáctica
+- Base Ubuntu 24.04 con GNOME y GDM
+- Estética tipo macOS: tema, iconos y cursores **WhiteSur**, fuente Inter (con Yaru como respaldo)
+- Dock inferior transparente; el botón de aplicaciones es el logo de Atherium
+- Terminal translúcida con la paleta de Atherium
 - `neofetch` muestra el logo de Atherium en ASCII (`/etc/atherium/logo.ascii`)
+- LibreOffice completo en español (Writer, Calc, Impress, Draw, Math, Base)
+- Firefox (PPA de Mozilla, sin snap) con Epiphany como respaldo
+- Instalador Calamares en el dock
 - Identidad propia: `/etc/os-release` -> `Atherium`
-- Instalador de Debian (modo live) incluido en el menú de arranque
 
 ## Compilar la ISO
 
 ### Opción A: GitHub Actions (recomendada)
 
-1. Sube el contenido de esta carpeta a la raíz del repositorio `galaxiumos`.
-2. Ve a **Actions -> Build Atherium ISO -> Run workflow**.
-3. Al terminar, descarga la ISO desde **Artifacts**. Si creas un tag (`git tag v1.0 && git push --tags`) se publica en **Releases**.
+1. **Actions -> Build Atherium ISO -> Run workflow**.
+2. Al terminar, descarga la ISO desde **Artifacts**. Con un tag (`git tag v1.0 && git push --tags`) se publica en **Releases**.
 
 ### Opción B: en tu equipo (Debian/Ubuntu)
 
@@ -27,23 +27,21 @@ Sistema operativo basado en **Debian 13 (trixie)** con escritorio **XFCE** moder
 sudo ./build.sh
 ```
 
-Genera `atherium-AAAA.MM.DD-amd64.iso` y su `.sha256`. Se necesitan ~15 GB libres y conexión a internet.
-
 ## Probar
 
 ```bash
 qemu-system-x86_64 -m 4G -enable-kvm -cdrom atherium-*.iso -boot d
 ```
 
-Usuario live: `atherium` / contraseña: `live`.
+Usuario live: `atherium` (sin contraseña en la sesión live).
 
 ## Personalizar
 
 | Qué | Dónde |
 |---|---|
 | Paquetes | `config/package-lists/atherium.list.chroot` |
+| Ajustes de GNOME y dock | `config/includes.chroot/etc/dconf/db/local.d/00-atherium` |
+| Logo de inicio (SVG simbólico) | `config/includes.chroot/usr/share/atherium/start-symbolic.svg` |
 | Logo ASCII | `config/includes.chroot/etc/atherium/logo.ascii` |
 | Fondo de pantalla | `config/includes.chroot/usr/share/backgrounds/atherium/wallpaper.png` |
-| Transparencias | `config/includes.chroot/etc/skel/.config/picom/picom.conf` |
-| Dock | `config/includes.chroot/etc/dconf/db/local.d/00-atherium` |
-| Branding / os-release | `config/hooks/live/0100-atherium-branding.hook.chroot` |
+| Branding, temas, Firefox | `config/hooks/live/0100-atherium-branding.hook.chroot` |

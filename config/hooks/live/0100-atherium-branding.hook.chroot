@@ -1,66 +1,53 @@
 #!/bin/sh
-# Se ejecuta dentro del chroot al construir la ISO.
+# Se ejecuta dentro del chroot al construir la ISO (Ubuntu 24.04 + GNOME).
 set -e
+export DEBIAN_FRONTEND=noninteractive
 
-# ---- Identidad del sistema: Atherium ----
-cat > /etc/os-release <<'EOF'
-PRETTY_NAME="Atherium"
-NAME="Atherium"
-VERSION_ID="1.0"
-VERSION="1.0 (Nebula)"
-VERSION_CODENAME=nebula
-ID=atherium
-ID_LIKE=debian
-HOME_URL="https://github.com/galaxiumos"
-SUPPORT_URL="https://github.com/galaxiumos"
-BUG_REPORT_URL="https://github.com/galaxiumos"
-EOF
-
-echo "Atherium 1.0 \\n \\l" > /etc/issue
-echo "Atherium 1.0" > /etc/issue.net
-cat > /etc/lsb-release <<'EOF'
-DISTRIB_ID=Atherium
-DISTRIB_RELEASE=1.0
-DISTRIB_CODENAME=nebula
-DISTRIB_DESCRIPTION="Atherium 1.0"
-EOF
-
-echo "atherium" > /etc/hostname
-
-# ---- Neofetch (no esta en los repos de Debian 13) ----
-# Se descarga la version 7.1.0 (MIT). Si falla, se crea un respaldo con fastfetch.
-if curl -fsSL --retry 3 -o /usr/local/bin/neofetch \
-    https://raw.githubusercontent.com/dylanaraps/neofetch/7.1.0/neofetch \
-    && head -n1 /usr/local/bin/neofetch | grep -q bash; then
-    chmod 755 /usr/local/bin/neofetch
-else
-    echo "AVISO: no se pudo descargar neofetch, usando fastfetch" >&2
-    sed 's/\${c[0-9]}//g' /etc/atherium/logo.ascii > /etc/atherium/logo.plain
-    cat > /usr/local/bin/neofetch <<'EOF'
-#!/bin/sh
-exec fastfetch --logo-type file-raw --logo /etc/atherium/logo.plain "$@"
-EOF
-    chmod 755 /usr/local/bin/neofetch
+# ---- Neofetch (viene en universe; si faltara se descarga) ----
+if ! command -v neofetch >/dev/null 2>&1; then
+    curl -fsSL --retry 3 -o /usr/local/bin/neofetch \
+        https://raw.githubusercontent.com/dylanaraps/neofetch/7.1.0/neofetch \
+        && chmod 755 /usr/local/bin/neofetch \
+        || echo "AVISO: neofetch no disponible" >&2
 fi
-
-# ---- Neofetch: configuracion global para cualquier usuario ----
 mkdir -p /etc/neofetch
 cp /etc/skel/.config/neofetch/config.conf /etc/neofetch/config.conf || true
 
-# ---- Estetica tipo macOS: WhiteSur (iconos, GTK, cursores) ----
-# No estan en los repos de Debian: se descargan de GitHub. Si algo falla se usa Arc/Papirus.
-GTK_THEME="Arc-Dark"
-XFWM_THEME="Arc-Dark"
-ICON_THEME="Papirus-Dark"
+# ---- Firefox: el paquete de Ubuntu es un stub de snap; se usa el PPA de Mozilla (deb) ----
+BROWSER_DESKTOP="org.gnome.Epiphany.desktop"
+if apt-get update -qq && add-apt-repository -y ppa:mozillateam/ppa; then
+    cat > /etc/apt/preferences.d/mozilla-firefox <<'EOF'
+Package: *
+Pin: release o=LP-PPA-mozillateam
+Pin-Priority: 1001
+
+Package: firefox*
+Pin: release o=Ubuntu
+Pin-Priority: -1
+EOF
+    if apt-get update -qq && apt-get install -y firefox firefox-locale-es; then
+        BROWSER_DESKTOP="firefox.desktop"
+    else
+        echo "AVISO: no se pudo instalar Firefox, se usa Epiphany" >&2
+    fi
+else
+    echo "AVISO: no se pudo anadir el PPA de Mozilla, se usa Epiphany" >&2
+fi
+
+# ---- Estetica tipo macOS: WhiteSur (iconos, GTK + shell, cursores) ----
+# No estan en los repos de Ubuntu: se descargan de GitHub. Si algo falla se usa Yaru.
+GTK_THEME="Yaru-dark"
+SHELL_THEME="Yaru-dark"
+BASE_ICONS="Yaru"
 CURSOR_THEME="Adwaita"
 WORK="$(mktemp -d)"
 
 if git clone --depth 1 https://github.com/vinceliuice/WhiteSur-icon-theme.git "$WORK/icons" \
     && (cd "$WORK/icons" && ./install.sh -d /usr/share/icons) \
     && [ -d /usr/share/icons/WhiteSur-dark ]; then
-    ICON_THEME="WhiteSur-dark"
+    BASE_ICONS="WhiteSur-dark"
 else
-    echo "AVISO: no se pudo instalar WhiteSur-icon-theme, se usa Papirus-Dark" >&2
+    echo "AVISO: no se pudo instalar WhiteSur-icon-theme, se usa Yaru" >&2
 fi
 
 # El instalador necesita USER y TERM (en el chroot no existen y salia en silencio)
@@ -69,11 +56,9 @@ if git clone --depth 1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$W
         bash -x ./install.sh -d /usr/share/themes -c Dark -o normal < /dev/null > "$WORK/gtk.log" 2>&1) \
     && [ -d /usr/share/themes/WhiteSur-Dark ]; then
     GTK_THEME="WhiteSur-Dark"
-    if [ -d /usr/share/themes/WhiteSur-Dark/xfwm4 ]; then
-        XFWM_THEME="WhiteSur-Dark"
-    fi
+    [ -d /usr/share/themes/WhiteSur-Dark/gnome-shell ] && SHELL_THEME="WhiteSur-Dark"
 else
-    echo "AVISO: no se pudo instalar WhiteSur-gtk-theme, se usa Arc-Dark" >&2
+    echo "AVISO: no se pudo instalar WhiteSur-gtk-theme, se usa Yaru-dark" >&2
     [ -f "$WORK/gtk.log" ] && { echo "--- ultimas lineas del instalador ---" >&2; tail -n 40 "$WORK/gtk.log" >&2; }
 fi
 
@@ -86,43 +71,52 @@ else
 fi
 rm -rf "$WORK"
 
-echo "Temas elegidos: gtk=$GTK_THEME xfwm4=$XFWM_THEME iconos=$ICON_THEME cursor=$CURSOR_THEME"
-
-# Sustituir los marcadores de las plantillas de configuracion
-for f in \
-    /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml \
-    /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml \
-    /etc/dconf/db/local.d/00-atherium
-do
-    sed -i "s/@GTK_THEME@/$GTK_THEME/g; s/@XFWM_THEME@/$XFWM_THEME/g; s/@ICON_THEME@/$ICON_THEME/g; s/@CURSOR_THEME@/$CURSOR_THEME/g" "$f"
+# ---- Tema de iconos "Atherium": hereda de WhiteSur y cambia el boton de apps por el logo ----
+ICON_DIR=/usr/share/icons/Atherium
+mkdir -p "$ICON_DIR/scalable/actions"
+for n in view-app-grid-symbolic view-app-grid-user-symbolic view-app-grid-ubuntu-symbolic \
+         view-app-grid-gdm-symbolic view-app-grid-unlock-dialog-symbolic; do
+    cp /usr/share/atherium/start-symbolic.svg "$ICON_DIR/scalable/actions/$n.svg"
 done
+cat > "$ICON_DIR/index.theme" <<EOF
+[Icon Theme]
+Name=Atherium
+Comment=Iconos de Atherium (logo en el boton de aplicaciones)
+Inherits=$BASE_ICONS,Yaru,Adwaita,hicolor
+Directories=scalable/actions
 
-# Cursor tambien para el cursor por defecto de X
+[scalable/actions]
+Context=Actions
+Size=16
+MinSize=1
+MaxSize=512
+Type=Scalable
+EOF
+gtk-update-icon-cache -f "$ICON_DIR" >/dev/null 2>&1 || true
+
+echo "Temas elegidos: gtk=$GTK_THEME shell=$SHELL_THEME iconos=Atherium(base $BASE_ICONS) cursor=$CURSOR_THEME navegador=$BROWSER_DESKTOP"
+
+# ---- Sustituir marcadores de la configuracion de GNOME ----
+sed -i "s/@GTK_THEME@/$GTK_THEME/g; s/@SHELL_THEME@/$SHELL_THEME/g; s/@CURSOR_THEME@/$CURSOR_THEME/g; s/@BROWSER_DESKTOP@/$BROWSER_DESKTOP/g" \
+    /etc/dconf/db/local.d/00-atherium
+
 mkdir -p /usr/share/icons/default
 printf '[Icon Theme]\nInherits=%s\n' "$CURSOR_THEME" > /usr/share/icons/default/index.theme
 
-# ---- Valores por defecto de dconf (plank, GTK) ----
-if command -v dconf >/dev/null 2>&1; then
-    mkdir -p /etc/dconf/profile
-    printf 'user-db:user\nsystem-db:local\n' > /etc/dconf/profile/user
-    dconf update || true
-fi
+# ---- dconf: valores por defecto del sistema y pantalla de inicio de sesion (GDM) ----
+mkdir -p /etc/dconf/profile /etc/dconf/db/gdm.d
+printf 'user-db:user\nsystem-db:local\n' > /etc/dconf/profile/user
+cat > /etc/dconf/db/gdm.d/00-atherium <<EOF
+[org/gnome/login-screen]
+logo='/usr/share/pixmaps/atherium-logo.png'
+disable-user-list=false
 
-# ---- Greeter de LightDM ----
-mkdir -p /etc/lightdm/lightdm-gtk-greeter.conf.d
-cat > /etc/lightdm/lightdm-gtk-greeter.conf.d/50-atherium.conf <<EOF
-[greeter]
-background=/usr/share/backgrounds/atherium/wallpaper.png
-theme-name=$GTK_THEME
-icon-theme-name=$ICON_THEME
-cursor-theme-name=$CURSOR_THEME
-font-name=Inter 11
-indicators=~host;~spacer;~clock;~spacer;~session;~a11y;~power
-position=50%,center
+[org/gnome/desktop/interface]
+icon-theme='Atherium'
+cursor-theme='$CURSOR_THEME'
+color-scheme='prefer-dark'
 EOF
-
-# ---- Permisos de scripts ----
-chmod +x /usr/local/bin/atherium-session-init 2>/dev/null || true
+dconf update || true
 
 # ---- Shell: neofetch al abrir una terminal interactiva ----
 cat >> /etc/skel/.bashrc <<'EOF'
@@ -134,3 +128,23 @@ if [ -t 1 ] && command -v neofetch >/dev/null 2>&1 && [ -z "$ATHERIUM_NEOFETCH_S
 fi
 alias ll='ls -lah --color=auto'
 EOF
+
+# ---- Identidad del sistema: Atherium (al final, para no confundir a las herramientas de apt) ----
+cat > /etc/os-release <<'EOF'
+PRETTY_NAME="Atherium"
+NAME="Atherium"
+VERSION_ID="1.0"
+VERSION="1.0 (Nebula)"
+VERSION_CODENAME=noble
+ID=atherium
+ID_LIKE="ubuntu debian"
+UBUNTU_CODENAME=noble
+HOME_URL="https://github.com/AkaV1/Atherium"
+SUPPORT_URL="https://github.com/AkaV1/Atherium"
+BUG_REPORT_URL="https://github.com/AkaV1/Atherium"
+EOF
+echo "Atherium 1.0 \\n \\l" > /etc/issue
+echo "Atherium 1.0" > /etc/issue.net
+# lsb-release se deja con el codename "noble" (lo usan add-apt-repository y otras herramientas)
+sed -i 's/^DISTRIB_DESCRIPTION=.*/DISTRIB_DESCRIPTION="Atherium 1.0 (Ubuntu 24.04)"/' /etc/lsb-release 2>/dev/null || true
+echo "atherium" > /etc/hostname

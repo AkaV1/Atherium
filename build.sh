@@ -1,5 +1,5 @@
 #!/bin/bash
-# Compila la ISO de Atherium. Debe ejecutarse como root en Debian/Ubuntu
+# Compila la ISO de Atherium (base Ubuntu 24.04 + GNOME). Debe ejecutarse como root en Debian/Ubuntu
 # (o dentro de un contenedor debian:trixie con --privileged).
 set -euo pipefail
 
@@ -16,7 +16,12 @@ apt-get install -y --no-install-recommends \
     live-build debootstrap squashfs-tools xorriso \
     grub-pc-bin grub-efi-amd64-bin grub-efi-amd64-signed shim-signed \
     mtools dosfstools syslinux syslinux-common isolinux \
-    ca-certificates curl git
+    ubuntu-keyring gnupg ca-certificates curl git
+
+# debootstrap de Debian puede no traer el script de noble: se reutiliza el generico de Ubuntu
+if [ ! -e /usr/share/debootstrap/scripts/noble ]; then
+    ln -s gutsy /usr/share/debootstrap/scripts/noble
+fi
 
 echo "==> Limpiando compilaciones previas"
 lb clean --purge || true

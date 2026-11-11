@@ -1,52 +1,59 @@
-# --- Escritorio XFCE ---
-xorg
-xfce4
-xfce4-terminal
-xfce4-whiskermenu-plugin
-xfce4-notifyd
-xfce4-power-manager
-xfce4-screenshooter
-xfce4-pulseaudio-plugin
-xfce4-taskmanager
-thunar
-thunar-archive-plugin
-mousepad
-ristretto
+# --- Escritorio GNOME (sin meta-paquetes de Ubuntu que arrastran snap) ---
+ubuntu-session
+gdm3
+gnome-shell
+gnome-shell-extensions
+gnome-shell-extension-prefs
+gnome-shell-extension-ubuntu-dock
+gnome-session
+gnome-control-center
+gnome-tweaks
+gnome-terminal
+nautilus
+gnome-text-editor
+gnome-calculator
+gnome-system-monitor
+gnome-disk-utility
+loupe
+evince
 file-roller
-lightdm
-lightdm-gtk-greeter
+gvfs-backends
 dconf-cli
+xdg-user-dirs-gtk
 
-# --- Dock y efectos (semitransparencia) ---
-plank
-picom
+# --- Arranque live e instalador ---
+casper
+calamares
+calamares-settings-ubuntu-common
 
-# --- Tema, iconos y fuentes ---
-arc-theme
-papirus-icon-theme
+# --- Tema, iconos y fuentes (Yaru queda como respaldo de WhiteSur) ---
+yaru-theme-gtk
+yaru-theme-icon
+yaru-theme-gnome-shell
 fonts-noto
 fonts-noto-color-emoji
 fonts-firacode
 fonts-inter
+
+# --- Dependencias para instalar WhiteSur desde GitHub ---
 sassc
 gtk2-engines-murrine
 gnome-themes-extra
 libglib2.0-dev-bin
 libxml2-utils
+git
+curl
+ca-certificates
+software-properties-common
+gnupg
 
 # --- Terminal / neofetch ---
-# neofetch ya no esta en Debian 13: el hook lo descarga; fastfetch es el respaldo
-fastfetch
+neofetch
 bash-completion
 htop
-curl
 wget
-git
 sudo
 nano
-
-# --- Maquinas virtuales (ajuste de resolucion y portapapeles) ---
-spice-vdagent
 
 # --- Red y audio ---
 network-manager
@@ -54,13 +61,15 @@ network-manager-gnome
 pipewire-audio
 pavucontrol
 
-# --- Aplicaciones ---
-firefox-esr
-firefox-esr-l10n-es-mx
-gvfs
-gvfs-backends
-udisks2
-gparted
+# --- Idioma: espanol ---
+language-pack-es
+language-pack-es-base
+language-pack-gnome-es
+language-pack-gnome-es-base
+hunspell-es
+
+# --- Navegador de respaldo (Firefox se anade desde el PPA de Mozilla en el hook) ---
+epiphany-browser
 
 # --- LibreOffice completo ---
 libreoffice
@@ -71,6 +80,10 @@ libreoffice-draw
 libreoffice-math
 libreoffice-base
 libreoffice-gtk3
+libreoffice-gnome
 libreoffice-l10n-es
 libreoffice-help-es
-hunspell-es
+
+# --- Utilidades ---
+gparted
+udisks2
