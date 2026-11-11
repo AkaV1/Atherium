@@ -1,10 +1,9 @@
 button-icon=/usr/share/pixmaps/atherium-logo.png
-button-single-row=true
 show-button-title=false
 show-button-icon=true
-menu-opacity=82
-menu-width=520
+menu-opacity=90
+menu-width=560
 menu-height=520
-profile-shape=1
+item-icon-size=3
 category-icon-size=1
-item-icon-size=2
+position-search-alternate=true

@@ -47,6 +47,57 @@ fi
 mkdir -p /etc/neofetch
 cp /etc/skel/.config/neofetch/config.conf /etc/neofetch/config.conf || true
 
+# ---- Estetica tipo macOS: WhiteSur (iconos, GTK, cursores) ----
+# No estan en los repos de Debian: se descargan de GitHub. Si algo falla se usa Arc/Papirus.
+GTK_THEME="Arc-Dark"
+XFWM_THEME="Arc-Dark"
+ICON_THEME="Papirus-Dark"
+CURSOR_THEME="Adwaita"
+WORK="$(mktemp -d)"
+
+if git clone --depth 1 https://github.com/vinceliuice/WhiteSur-icon-theme.git "$WORK/icons" \
+    && (cd "$WORK/icons" && ./install.sh -d /usr/share/icons) \
+    && [ -d /usr/share/icons/WhiteSur-dark ]; then
+    ICON_THEME="WhiteSur-dark"
+else
+    echo "AVISO: no se pudo instalar WhiteSur-icon-theme, se usa Papirus-Dark" >&2
+fi
+
+if git clone --depth 1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$WORK/gtk" \
+    && (cd "$WORK/gtk" && ./install.sh -d /usr/share/themes -c Dark -o normal) \
+    && [ -d /usr/share/themes/WhiteSur-Dark ]; then
+    GTK_THEME="WhiteSur-Dark"
+    if [ -d /usr/share/themes/WhiteSur-Dark/xfwm4 ]; then
+        XFWM_THEME="WhiteSur-Dark"
+    fi
+else
+    echo "AVISO: no se pudo instalar WhiteSur-gtk-theme, se usa Arc-Dark" >&2
+fi
+
+if git clone --depth 1 https://github.com/vinceliuice/WhiteSur-cursors.git "$WORK/cursors" \
+    && (cd "$WORK/cursors" && ./install.sh) \
+    && [ -d /usr/share/icons/WhiteSur-cursors ]; then
+    CURSOR_THEME="WhiteSur-cursors"
+else
+    echo "AVISO: no se pudo instalar WhiteSur-cursors, se usa Adwaita" >&2
+fi
+rm -rf "$WORK"
+
+echo "Temas elegidos: gtk=$GTK_THEME xfwm4=$XFWM_THEME iconos=$ICON_THEME cursor=$CURSOR_THEME"
+
+# Sustituir los marcadores de las plantillas de configuracion
+for f in \
+    /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml \
+    /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml \
+    /etc/dconf/db/local.d/00-atherium
+do
+    sed -i "s/@GTK_THEME@/$GTK_THEME/g; s/@XFWM_THEME@/$XFWM_THEME/g; s/@ICON_THEME@/$ICON_THEME/g; s/@CURSOR_THEME@/$CURSOR_THEME/g" "$f"
+done
+
+# Cursor tambien para el cursor por defecto de X
+mkdir -p /usr/share/icons/default
+printf '[Icon Theme]\nInherits=%s\n' "$CURSOR_THEME" > /usr/share/icons/default/index.theme
+
 # ---- Valores por defecto de dconf (plank, GTK) ----
 if command -v dconf >/dev/null 2>&1; then
     mkdir -p /etc/dconf/profile
@@ -54,34 +105,15 @@ if command -v dconf >/dev/null 2>&1; then
     dconf update || true
 fi
 
-# ---- Tema de ventanas "Atherium" (botones ▲ ▼ ◆ minimalistas) ----
-# Se parte del tema xfwm4 de Arc-Dark y se sustituyen los botones.
-if [ -d /usr/share/themes/Arc-Dark/xfwm4 ]; then
-    mkdir -p /usr/share/themes/Atherium
-    rm -rf /usr/share/themes/Atherium/xfwm4
-    cp -r /usr/share/themes/Arc-Dark/xfwm4 /usr/share/themes/Atherium/xfwm4
-    cd /usr/share/themes/Atherium/xfwm4
-    rm -f close-* hide-* maximize-* maximize-toggled-*
-    cp /usr/share/atherium/xfwm4-buttons/* .
-    # Texto del titulo discreto
-    for k in active_text_color inactive_text_color; do
-        sed -i "/^$k=/d" themerc
-    done
-    printf 'active_text_color=#c9d1ff\ninactive_text_color=#7a82b0\n' >> themerc
-    cd /
-else
-    echo "AVISO: no se encontro Arc-Dark/xfwm4, se usara su tema de ventanas" >&2
-    sed -i 's|value="Atherium"/>|value="Arc-Dark"/>|' /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
-fi
-
 # ---- Greeter de LightDM ----
 mkdir -p /etc/lightdm/lightdm-gtk-greeter.conf.d
-cat > /etc/lightdm/lightdm-gtk-greeter.conf.d/50-atherium.conf <<'EOF'
+cat > /etc/lightdm/lightdm-gtk-greeter.conf.d/50-atherium.conf <<EOF
 [greeter]
 background=/usr/share/backgrounds/atherium/wallpaper.png
-theme-name=Arc-Dark
-icon-theme-name=Papirus-Dark
-font-name=Noto Sans 11
+theme-name=$GTK_THEME
+icon-theme-name=$ICON_THEME
+cursor-theme-name=$CURSOR_THEME
+font-name=Inter 11
 indicators=~host;~spacer;~clock;~spacer;~session;~a11y;~power
 position=50%,center
 EOF

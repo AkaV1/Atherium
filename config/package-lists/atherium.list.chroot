@@ -27,6 +27,12 @@ papirus-icon-theme
 fonts-noto
 fonts-noto-color-emoji
 fonts-firacode
+fonts-inter
+sassc
+gtk2-engines-murrine
+gnome-themes-extra
+libglib2.0-dev-bin
+libxml2-utils
 
 # --- Terminal / neofetch ---
 # neofetch ya no esta en Debian 13: el hook lo descarga; fastfetch es el respaldo
@@ -55,3 +61,16 @@ gvfs
 gvfs-backends
 udisks2
 gparted
+
+# --- LibreOffice completo ---
+libreoffice
+libreoffice-writer
+libreoffice-calc
+libreoffice-impress
+libreoffice-draw
+libreoffice-math
+libreoffice-base
+libreoffice-gtk3
+libreoffice-l10n-es
+libreoffice-help-es
+hunspell-es

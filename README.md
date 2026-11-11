@@ -4,8 +4,8 @@ Sistema operativo basado en **Debian 13 (trixie)** con escritorio **XFCE** moder
 
 ## Características
 
-- XFCE con tema oscuro Arc + iconos Papirus-Dark
-- Transparencias, blur y esquinas redondeadas con **picom**
+- XFCE con tema oscuro **WhiteSur** (estilo macOS) con iconos y cursores WhiteSur
+- Ventanas translúcidas (compositor de xfwm4; en hardware real picom con blur y esquinas redondeadas)
 - Dock **Plank** centrado en la parte inferior (zoom al pasar el cursor)
 - Panel superior semitransparente
 - Terminal translúcida con paleta galáctica

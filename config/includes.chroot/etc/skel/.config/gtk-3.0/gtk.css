@@ -1,34 +1,23 @@
-/* Atherium: panel flotante, translucido y minimalista */
-
-/* Barra superior: pastilla redondeada con margen alrededor */
-.xfce4-panel.background {
-    background-color: rgba(120, 170, 190, 0.45);
-    background-clip: padding-box;
-    border: 8px solid transparent;
-    border-radius: 22px;
-    color: #eef2ff;
-}
-
-/* Boton del menu (logo) dentro de un cuadrado redondeado oscuro */
-.xfce4-panel button {
-    background: rgba(30, 34, 60, 0.75);
-    border: none;
-    border-radius: 12px;
-    padding: 2px 6px;
+/* Atherium: panel invisible, solo el logo; menus redondeados estilo macOS */
+.xfce4-panel.background,
+.xfce4-panel .background {
+    background: transparent;
     box-shadow: none;
+    border: none;
+}
+.xfce4-panel button {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 10px;
+    padding: 2px 6px;
 }
 .xfce4-panel button:hover {
-    background: rgba(60, 68, 120, 0.85);
+    background: rgba(255, 255, 255, 0.18);
 }
-
-/* Menus emergentes translucidos */
 menu, .menu, .popup {
-    background-color: rgba(28, 32, 58, 0.85);
-    border-radius: 14px;
+    border-radius: 12px;
 }
-
-/* Tooltips minimalistas */
 tooltip {
-    background-color: rgba(28, 32, 58, 0.9);
-    border-radius: 10px;
+    border-radius: 8px;
 }
