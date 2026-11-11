@@ -64,7 +64,7 @@ else
 fi
 
 if git clone --depth 1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$WORK/gtk" \
-    && (cd "$WORK/gtk" && ./install.sh -d /usr/share/themes -c Dark -o normal) \
+    && (cd "$WORK/gtk" && env USER=root LOGNAME=root HOME=/root ./install.sh -d /usr/share/themes -c Dark -o normal < /dev/null) \
     && [ -d /usr/share/themes/WhiteSur-Dark ]; then
     GTK_THEME="WhiteSur-Dark"
     if [ -d /usr/share/themes/WhiteSur-Dark/xfwm4 ]; then
