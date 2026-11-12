@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Atherium
+Description=Pantalla de arranque de Atherium
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/atherium
+ScriptFile=/usr/share/plymouth/themes/atherium/atherium.script

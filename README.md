@@ -1,31 +1,29 @@
 # Atherium
 
-Sistema operativo basado en **Ubuntu 24.04 LTS (noble)** con escritorio **GNOME** estilo macOS, dock inferior transparente y el logo de Atherium como icono de inicio.
+Sistema operativo basado en **Ubuntu 24.04 LTS (noble)** con **GNOME**, estilo **Material You**, barra tipo **Windows 11** y el logo de Atherium como botón de inicio.
 
 ## Características
 
-- Base Ubuntu 24.04 con GNOME y GDM
-- Estética tipo macOS: tema, iconos y cursores **WhiteSur**, fuente Inter (con Yaru como respaldo)
-- Dock inferior transparente; el botón de aplicaciones es el logo de Atherium
-- Terminal translúcida con la paleta de Atherium
-- `neofetch` muestra el logo de Atherium en ASCII (`/etc/atherium/logo.ascii`)
-- LibreOffice completo en español (Writer, Calc, Impress, Draw, Math, Base)
-- Firefox (PPA de Mozilla, sin snap) con Epiphany como respaldo
-- Instalador Calamares en el dock
-- Identidad propia: `/etc/os-release` -> `Atherium`
+- **Menos Ubuntu:** sin ubuntu-session, Yaru, snap, apport, Pro ni anuncios del MOTD
+- **Material You:** tema GTK/Shell Colloid (morado oscuro), fuente Roboto, cursor Bibata
+- **Iconos tipo Android:** Tela-circle (iconos circulares de colores)
+- **Barra tipo Windows 11:** Dash to Panel con iconos centrados y botón de inicio con tu logo (ArcMenu, menú estilo Windows 11, si está disponible)
+- **Ventanas translúcidas** con botones ▲ minimizar, ▼ maximizar, ◆ cerrar (GTK3 y GTK4) y desenfoque con Blur my Shell
+- **Pantalla de inicio de sesión y splash de arranque** propios
+- **Optimizado:** zram con zstd, ajustes de sysctl, squashfs zstd, servicios innecesarios desactivados
+- LibreOffice completo en español, Firefox sin snap, instalador Calamares
+- `neofetch` con el logo de Atherium; `/etc/os-release` -> `Atherium`
+
+## Usuario de la sesión live
+
+Usuario `usuario1` (se muestra como **Usuario 1**), contraseña `live`. Entra solo y `sudo` no pide contraseña.
 
 ## Compilar la ISO
-
-### Opción A: GitHub Actions (recomendada)
 
 1. **Actions -> Build Atherium ISO -> Run workflow**.
 2. Al terminar, descarga la ISO desde **Artifacts**. Con un tag (`git tag v1.0 && git push --tags`) se publica en **Releases**.
 
-### Opción B: en tu equipo (Debian/Ubuntu)
-
-```bash
-sudo ./build.sh
-```
+También: `sudo ./build.sh` en Debian/Ubuntu.
 
 ## Probar
 
@@ -33,15 +31,14 @@ sudo ./build.sh
 qemu-system-x86_64 -m 4G -enable-kvm -cdrom atherium-*.iso -boot d
 ```
 
-Usuario live: `atherium`, contraseña `live` (la sesión live entra sola y `sudo` no la pide). Al instalar con Calamares defines tu propio usuario y contraseña.
-
 ## Personalizar
 
 | Qué | Dónde |
 |---|---|
 | Paquetes | `config/package-lists/atherium.list.chroot` |
-| Ajustes de GNOME y dock | `config/includes.chroot/etc/dconf/db/local.d/00-atherium` |
-| Logo de inicio (SVG simbólico) | `config/includes.chroot/usr/share/atherium/start-symbolic.svg` |
-| Logo ASCII | `config/includes.chroot/etc/atherium/logo.ascii` |
-| Fondo de pantalla | `config/includes.chroot/usr/share/backgrounds/atherium/wallpaper.png` |
-| Branding, temas, Firefox | `config/hooks/live/0100-atherium-branding.hook.chroot` |
+| Ajustes de GNOME | `config/includes.chroot/etc/dconf/db/local.d/00-atherium` |
+| Temas, barra, GDM, Plymouth | `config/hooks/live/0100-atherium-branding.hook.chroot` |
+| Ventanas translúcidas (GTK4 / GTK3) | `.../usr/share/atherium/gtk4-overrides.css`, `.../etc/skel/.config/gtk-3.0/gtk.css` |
+| Icono de inicio | `.../usr/share/atherium/start-icon.png` |
+| Usuario live | `.../etc/live/config.conf.d/atherium.conf` |
+| Fondos | `.../usr/share/backgrounds/atherium/` |

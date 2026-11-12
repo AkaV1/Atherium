@@ -1,0 +1,21 @@
+/* ===== Atherium: ventanas translucidas y botones ▲ ▼ ◆ (GTK3) ===== */
+window.background:not(.popup):not(.tooltip):not(.menu) {
+    background-color: rgba(29, 27, 32, 0.80);
+}
+headerbar, .titlebar {
+    background-color: rgba(33, 31, 38, 0.85);
+    background-image: none;
+}
+.view, textview text, iconview {
+    background-color: rgba(29, 27, 32, 0.55);
+}
+button.titlebutton {
+    background: transparent;
+    background-image: none;
+    box-shadow: none;
+    border-color: transparent;
+}
+button.titlebutton:hover { background-color: rgba(255, 255, 255, 0.14); }
+button.titlebutton.minimize { color: #ffd54a; }
+button.titlebutton.maximize { color: #9a6bff; }
+button.titlebutton.close    { color: #ff4d5e; }

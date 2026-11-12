@@ -1,0 +1,23 @@
+
+/* ===== Atherium: ventanas translucidas y botones ▲ ▼ ◆ (GTK4 / libadwaita) ===== */
+@define-color window_bg_color rgba(29, 27, 32, 0.78);
+@define-color view_bg_color rgba(29, 27, 32, 0.55);
+@define-color headerbar_bg_color rgba(33, 31, 38, 0.80);
+@define-color headerbar_backdrop_color rgba(33, 31, 38, 0.70);
+@define-color sidebar_bg_color rgba(33, 31, 38, 0.65);
+@define-color secondary_sidebar_bg_color rgba(33, 31, 38, 0.60);
+@define-color card_bg_color rgba(43, 41, 48, 0.65);
+@define-color popover_bg_color rgba(43, 41, 48, 0.94);
+@define-color dialog_bg_color rgba(43, 41, 48, 0.94);
+
+windowcontrols > button {
+    background: transparent;
+    box-shadow: none;
+    min-width: 22px;
+    min-height: 22px;
+    padding: 2px 5px;
+}
+windowcontrols > button:hover { background: rgba(255, 255, 255, 0.14); }
+windowcontrols > button.minimize { color: #ffd54a; }
+windowcontrols > button.maximize { color: #9a6bff; }
+windowcontrols > button.close    { color: #ff4d5e; }

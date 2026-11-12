@@ -2,16 +2,20 @@
 gtk-theme='@GTK_THEME@'
 icon-theme='Atherium'
 cursor-theme='@CURSOR_THEME@'
-font-name='Inter 10'
-document-font-name='Inter 10'
+font-name='Roboto 10'
+document-font-name='Roboto 10'
 monospace-font-name='Fira Code 10'
 color-scheme='prefer-dark'
 enable-hot-corners=false
 clock-show-weekday=true
 
+# Botones de ventana a la derecha: ▲ minimizar, ▼ maximizar, ◆ cerrar
 [org/gnome/desktop/wm/preferences]
-button-layout='close,minimize,maximize:'
-titlebar-font='Inter Bold 10'
+button-layout=':minimize,maximize,close'
+titlebar-font='Roboto Medium 10'
+
+[org/gnome/mutter]
+edge-tiling=true
 
 [org/gnome/desktop/background]
 picture-uri='file:///usr/share/backgrounds/atherium/wallpaper.png'
@@ -19,37 +23,19 @@ picture-uri-dark='file:///usr/share/backgrounds/atherium/wallpaper.png'
 picture-options='zoom'
 
 [org/gnome/desktop/screensaver]
-picture-uri='file:///usr/share/backgrounds/atherium/wallpaper.png'
+picture-uri='file:///usr/share/backgrounds/atherium/login.png'
 picture-options='zoom'
 
 [org/gnome/desktop/input-sources]
 sources=[('xkb', 'latam')]
 
 [org/gnome/shell]
-enabled-extensions=['ubuntu-dock@ubuntu.com', 'user-theme@gnome-shell-extensions.gcampax.github.com']
 favorite-apps=['org.gnome.Nautilus.desktop', '@BROWSER_DESKTOP@', 'org.gnome.Terminal.desktop', 'libreoffice-writer.desktop', 'libreoffice-calc.desktop', 'libreoffice-impress.desktop', 'org.gnome.TextEditor.desktop', 'org.gnome.Settings.desktop', 'calamares.desktop']
 
 [org/gnome/shell/extensions/user-theme]
 name='@SHELL_THEME@'
 
-# Dock inferior, transparente, estilo macOS. El boton de apps usa el logo de Atherium
-# (icono view-app-grid-symbolic del tema de iconos "Atherium") y va al principio.
-[org/gnome/shell/extensions/dash-to-dock]
-dock-position='BOTTOM'
-dock-fixed=true
-extend-height=false
-dash-max-icon-size=56
-transparency-mode='FIXED'
-background-opacity=0.0
-custom-background-color=false
-apply-custom-theme=false
-running-indicator-style='DOTS'
-show-apps-at-top=true
-show-trash=false
-show-mounts=false
-click-action='focus-or-previews'
-
-# Terminal translucida con la paleta de Atherium
+# Terminal translucida con paleta Material You
 [org/gnome/terminal/legacy/profiles:]
 default='b1dcc9dd-5262-4d8d-a863-c897e6d979b9'
 list=['b1dcc9dd-5262-4d8d-a863-c897e6d979b9']
@@ -57,8 +43,9 @@ list=['b1dcc9dd-5262-4d8d-a863-c897e6d979b9']
 [org/gnome/terminal/legacy/profiles:/:b1dcc9dd-5262-4d8d-a863-c897e6d979b9]
 visible-name='Atherium'
 use-theme-colors=false
-foreground-color='rgb(230,233,255)'
-background-color='rgb(11,11,36)'
+foreground-color='rgb(230,224,233)'
+background-color='rgb(20,18,24)'
+palette=['rgb(29,27,32)', 'rgb(242,184,181)', 'rgb(168,218,181)', 'rgb(255,224,130)', 'rgb(208,188,255)', 'rgb(239,184,200)', 'rgb(128,222,234)', 'rgb(230,224,233)', 'rgb(73,69,79)', 'rgb(255,180,171)', 'rgb(197,231,203)', 'rgb(255,236,179)', 'rgb(234,221,255)', 'rgb(255,216,228)', 'rgb(178,235,242)', 'rgb(255,255,255)']
 use-transparent-background=true
 background-transparency-percent=22
 use-system-font=false

@@ -1,9 +1,30 @@
 #!/bin/sh
-# Se ejecuta dentro del chroot al construir la ISO (Ubuntu 24.04 + GNOME).
+# Se ejecuta dentro del chroot al construir la ISO (Ubuntu 24.04 + GNOME, estilo Material You).
+# Cada paso externo tiene respaldo: si algo falla el sistema sigue arrancando con GNOME estandar.
 set -e
 export DEBIAN_FRONTEND=noninteractive
+EXT_DIR=/usr/share/gnome-shell/extensions
 
-# ---- Neofetch (viene en universe; si faltara se descarga) ----
+# ============================ 1) Menos Ubuntu ============================
+cat > /etc/apt/preferences.d/nosnap.pref <<'EOF'
+Package: snapd
+Pin: release a=*
+Pin-Priority: -10
+EOF
+for p in snapd apport apport-gtk whoopsie ubuntu-report popularity-contest \
+         ubuntu-advantage-tools ubuntu-pro-client ubuntu-pro-client-l10n; do
+    if dpkg -s "$p" >/dev/null 2>&1; then
+        apt-get purge -y "$p" >/dev/null 2>&1 || echo "AVISO: no se pudo purgar $p" >&2
+    fi
+done
+rm -f /etc/update-motd.d/50-motd-news /etc/update-motd.d/88-esm-announce \
+      /etc/update-motd.d/91-contract-ua-esm-status /etc/apt/apt.conf.d/20apt-esm-hook.conf
+for u in NetworkManager-wait-online.service apt-news.service esm-cache.service motd-news.timer cups-browsed.service; do
+    systemctl disable "$u" >/dev/null 2>&1 || true
+done
+systemctl mask apt-news.service esm-cache.service >/dev/null 2>&1 || true
+
+# ============================ 2) Neofetch ============================
 if ! command -v neofetch >/dev/null 2>&1; then
     curl -fsSL --retry 3 -o /usr/local/bin/neofetch \
         https://raw.githubusercontent.com/dylanaraps/neofetch/7.1.0/neofetch \
@@ -13,7 +34,7 @@ fi
 mkdir -p /etc/neofetch
 cp /etc/skel/.config/neofetch/config.conf /etc/neofetch/config.conf || true
 
-# ---- Firefox: el paquete de Ubuntu es un stub de snap; se usa el PPA de Mozilla (deb) ----
+# ============================ 3) Firefox (PPA de Mozilla, sin snap) ============================
 BROWSER_DESKTOP="org.gnome.Epiphany.desktop"
 if apt-get update -qq && add-apt-repository -y ppa:mozillateam/ppa; then
     cat > /etc/apt/preferences.d/mozilla-firefox <<'EOF'
@@ -34,55 +55,73 @@ else
     echo "AVISO: no se pudo anadir el PPA de Mozilla, se usa Epiphany" >&2
 fi
 
-# ---- Estetica tipo macOS: WhiteSur (iconos, GTK + shell, cursores) ----
-# No estan en los repos de Ubuntu: se descargan de GitHub. Si algo falla se usa Yaru.
-GTK_THEME="Yaru-dark"
-SHELL_THEME="Yaru-dark"
-BASE_ICONS="Yaru"
+# ============================ 4) Material You: tema GTK/shell, iconos tipo Android, cursor ============================
+GTK_THEME="Adwaita-dark"
+SHELL_THEME=""
+BASE_ICONS="Adwaita"
 CURSOR_THEME="Adwaita"
 WORK="$(mktemp -d)"
 
-if git clone --depth 1 https://github.com/vinceliuice/WhiteSur-icon-theme.git "$WORK/icons" \
-    && (cd "$WORK/icons" && ./install.sh -d /usr/share/icons) \
-    && [ -d /usr/share/icons/WhiteSur-dark ]; then
-    BASE_ICONS="WhiteSur-dark"
-else
-    echo "AVISO: no se pudo instalar WhiteSur-icon-theme, se usa Yaru" >&2
-fi
-
-# El instalador necesita USER y TERM (en el chroot no existen y salia en silencio)
-if git clone --depth 1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$WORK/gtk" \
+# --- Colloid (GTK + GNOME Shell), variante morada oscura: superficies tonales y esquinas redondeadas ---
+if git clone --depth 1 https://github.com/vinceliuice/Colloid-gtk-theme.git "$WORK/gtk" \
     && (cd "$WORK/gtk" && env USER=root LOGNAME=root HOME=/root TERM=xterm-256color \
-        bash -x ./install.sh -d /usr/share/themes -c Dark -o normal < /dev/null > "$WORK/gtk.log" 2>&1) \
-    && [ -d /usr/share/themes/WhiteSur-Dark ]; then
-    GTK_THEME="WhiteSur-Dark"
-    [ -d /usr/share/themes/WhiteSur-Dark/gnome-shell ] && SHELL_THEME="WhiteSur-Dark"
+        bash -x ./install.sh -d /usr/share/themes -t purple -c dark < /dev/null > "$WORK/gtk.log" 2>&1) \
+    && [ -d /usr/share/themes/Colloid-Purple-Dark ]; then
+    GTK_THEME="Colloid-Purple-Dark"
+    [ -d /usr/share/themes/Colloid-Purple-Dark/gnome-shell ] && SHELL_THEME="Colloid-Purple-Dark"
 else
-    echo "AVISO: no se pudo instalar WhiteSur-gtk-theme, se usa Yaru-dark" >&2
+    echo "AVISO: no se pudo instalar Colloid, se usa Adwaita-dark" >&2
     [ -f "$WORK/gtk.log" ] && { echo "--- ultimas lineas del instalador ---" >&2; tail -n 40 "$WORK/gtk.log" >&2; }
 fi
 
-if git clone --depth 1 https://github.com/vinceliuice/WhiteSur-cursors.git "$WORK/cursors" \
-    && (cd "$WORK/cursors" && ./install.sh) \
-    && [ -d /usr/share/icons/WhiteSur-cursors ]; then
-    CURSOR_THEME="WhiteSur-cursors"
+# --- Tela-circle: iconos circulares de colores, como los de un telefono Android ---
+if git clone --depth 1 https://github.com/vinceliuice/Tela-circle-icon-theme.git "$WORK/icons" \
+    && (cd "$WORK/icons" && env USER=root LOGNAME=root HOME=/root TERM=xterm-256color \
+        bash ./install.sh -d /usr/share/icons purple < /dev/null > "$WORK/icons.log" 2>&1); then
+    T="$(ls -d /usr/share/icons/Tela-circle*dark 2>/dev/null | head -n1)"
+    [ -z "$T" ] && T="$(ls -d /usr/share/icons/Tela-circle* 2>/dev/null | head -n1)"
+    [ -n "$T" ] && BASE_ICONS="$(basename "$T")"
 else
-    echo "AVISO: no se pudo instalar WhiteSur-cursors, se usa Adwaita" >&2
+    echo "AVISO: no se pudo instalar Tela-circle, se usa Adwaita" >&2
+    [ -f "$WORK/icons.log" ] && tail -n 20 "$WORK/icons.log" >&2
 fi
+
+# --- Bibata: cursor estilo Material Design ---
+if curl -fsSL --retry 3 -o "$WORK/bibata.tar.xz" \
+    https://github.com/ful1e5/Bibata_Cursor/releases/latest/download/Bibata-Modern-Classic.tar.xz \
+    && tar -xJf "$WORK/bibata.tar.xz" -C /usr/share/icons \
+    && [ -d /usr/share/icons/Bibata-Modern-Classic ]; then
+    CURSOR_THEME="Bibata-Modern-Classic"
+else
+    echo "AVISO: no se pudo instalar Bibata, se usa Adwaita" >&2
+fi
+
+# --- libadwaita / GTK4: se copia el tema de Colloid a la configuracion de cada usuario nuevo ---
+mkdir -p /etc/skel/.config/gtk-4.0
+if [ "$GTK_THEME" = "Colloid-Purple-Dark" ] && [ -d "/usr/share/themes/$GTK_THEME/gtk-4.0" ]; then
+    cp -rL "/usr/share/themes/$GTK_THEME/gtk-4.0/." /etc/skel/.config/gtk-4.0/
+    mv /etc/skel/.config/gtk-4.0/gtk.css /etc/skel/.config/gtk-4.0/colloid-base.css 2>/dev/null || true
+    rm -f /etc/skel/.config/gtk-4.0/gtk-dark.css
+    printf '@import url("colloid-base.css");\n' > /etc/skel/.config/gtk-4.0/gtk.css
+else
+    : > /etc/skel/.config/gtk-4.0/gtk.css
+fi
+cat /usr/share/atherium/gtk4-overrides.css >> /etc/skel/.config/gtk-4.0/gtk.css
 rm -rf "$WORK"
 
-# ---- Tema de iconos "Atherium": hereda de WhiteSur y cambia el boton de apps por el logo ----
+# --- Tema de iconos "Atherium": hereda Tela-circle; boton de apps = logo; botones de ventana ▲ ▼ ◆ ---
 ICON_DIR=/usr/share/icons/Atherium
 mkdir -p "$ICON_DIR/scalable/actions"
 for n in view-app-grid-symbolic view-app-grid-user-symbolic view-app-grid-ubuntu-symbolic \
          view-app-grid-gdm-symbolic view-app-grid-unlock-dialog-symbolic; do
     cp /usr/share/atherium/start-symbolic.svg "$ICON_DIR/scalable/actions/$n.svg"
 done
+cp /usr/share/atherium/wc/*.svg "$ICON_DIR/scalable/actions/"
 cat > "$ICON_DIR/index.theme" <<EOF
 [Icon Theme]
 Name=Atherium
-Comment=Iconos de Atherium (logo en el boton de aplicaciones)
-Inherits=$BASE_ICONS,Yaru,Adwaita,hicolor
+Comment=Iconos de Atherium: estilo Android, logo en el boton de aplicaciones
+Inherits=$BASE_ICONS,Adwaita,hicolor
 Directories=scalable/actions
 
 [scalable/actions]
@@ -94,16 +133,129 @@ Type=Scalable
 EOF
 gtk-update-icon-cache -f "$ICON_DIR" >/dev/null 2>&1 || true
 
-echo "Temas elegidos: gtk=$GTK_THEME shell=$SHELL_THEME iconos=Atherium(base $BASE_ICONS) cursor=$CURSOR_THEME navegador=$BROWSER_DESKTOP"
+# ============================ 5) Extensiones: barra tipo Windows 11 ============================
+install_ego() {   # descarga una extension compatible con GNOME 46 desde extensions.gnome.org
+    uuid="$1"
+    curl -fsSL --retry 3 -o "/tmp/$uuid.zip" \
+        "https://extensions.gnome.org/download-extension/${uuid}.shell-extension.zip?shell_version=46" \
+        && mkdir -p "$EXT_DIR/$uuid" && unzip -qo "/tmp/$uuid.zip" -d "$EXT_DIR/$uuid" \
+        && [ -f "$EXT_DIR/$uuid/metadata.json" ] \
+        && { [ ! -d "$EXT_DIR/$uuid/schemas" ] || glib-compile-schemas "$EXT_DIR/$uuid/schemas"; }
+}
 
-# ---- Sustituir marcadores de la configuracion de GNOME ----
+# Dash to Panel: barra inferior con iconos centrados
+DTP_OK=0
+if git clone --depth 1 https://github.com/home-sweet-gnome/dash-to-panel.git /tmp/dtp \
+    && (cd /tmp/dtp && make install DESTDIR=/ VERSION=70 >/tmp/dtp.log 2>&1) \
+    && [ -f "$EXT_DIR/dash-to-panel@jderose9.github.com/metadata.json" ]; then
+    DTP_OK=1
+else
+    echo "AVISO: no se pudo instalar Dash to Panel" >&2
+    [ -f /tmp/dtp.log ] && tail -n 20 /tmp/dtp.log >&2
+fi
+rm -rf /tmp/dtp
+
+# ArcMenu: menu de inicio estilo Windows 11 (se valida su esquema antes de usarlo)
+ARC_OK=0
+ARC_UUID="arcmenu@arcmenu.com"
+if [ "$DTP_OK" = 1 ] && install_ego "$ARC_UUID"; then
+    SCH="$(grep -l 'org.gnome.shell.extensions.arcmenu' "$EXT_DIR/$ARC_UUID"/schemas/*.xml 2>/dev/null | head -n1)"
+    if [ -n "$SCH" ] && grep -q 'name="menu-button-icon"' "$SCH" \
+        && grep -q 'name="custom-menu-button-icon"' "$SCH" && grep -q 'Custom_Icon' "$SCH"; then
+        ARC_OK=1
+    else
+        echo "AVISO: el esquema de ArcMenu no tiene las claves esperadas, se descarta" >&2
+        rm -rf "$EXT_DIR/$ARC_UUID"
+    fi
+else
+    echo "AVISO: no se pudo instalar ArcMenu" >&2
+    rm -rf "$EXT_DIR/$ARC_UUID"
+fi
+
+# Blur my Shell: desenfoque detras de ventanas translucidas y paneles
+BLUR_OK=0
+if install_ego "blur-my-shell@aunetx"; then BLUR_OK=1; else
+    echo "AVISO: no se pudo instalar Blur my Shell" >&2
+    rm -rf "$EXT_DIR/blur-my-shell@aunetx"
+fi
+
+glib-compile-schemas /usr/share/glib-2.0/schemas >/dev/null 2>&1 || true
+
+echo "Temas elegidos: gtk=$GTK_THEME shell=${SHELL_THEME:-defecto} iconos=Atherium(base $BASE_ICONS) cursor=$CURSOR_THEME navegador=$BROWSER_DESKTOP dtp=$DTP_OK arcmenu=$ARC_OK blur=$BLUR_OK"
+
+# ============================ 6) dconf: sustituir marcadores y generar la barra ============================
 sed -i "s/@GTK_THEME@/$GTK_THEME/g; s/@SHELL_THEME@/$SHELL_THEME/g; s/@CURSOR_THEME@/$CURSOR_THEME/g; s/@BROWSER_DESKTOP@/$BROWSER_DESKTOP/g" \
     /etc/dconf/db/local.d/00-atherium
+
+EXTS="'user-theme@gnome-shell-extensions.gcampax.github.com'"
+[ "$DTP_OK" = 1 ]  && EXTS="$EXTS, 'dash-to-panel@jderose9.github.com'"
+[ "$ARC_OK" = 1 ]  && EXTS="$EXTS, '$ARC_UUID'"
+[ "$BLUR_OK" = 1 ] && EXTS="$EXTS, 'blur-my-shell@aunetx'"
+
+{
+    echo "[org/gnome/shell]"
+    echo "enabled-extensions=[$EXTS]"
+    echo
+    if [ "$DTP_OK" = 1 ]; then
+        # Con ArcMenu el boton de inicio lo pone ArcMenu dentro de leftBox; sin ArcMenu se usa el boton
+        # de aplicaciones de Dash to Panel con el logo. En ambos casos queda centrado como en Windows 11.
+        if [ "$ARC_OK" = 1 ]; then SHOWAPPS=false; LEFTBOX=true; else SHOWAPPS=true; LEFTBOX=false; fi
+        cat <<EOF
+[org/gnome/shell/extensions/dash-to-panel]
+panel-positions='{"0":"BOTTOM"}'
+panel-sizes='{"0":48}'
+panel-lengths='{"0":100}'
+panel-anchors='{"0":"MIDDLE"}'
+panel-element-positions-monitors-sync=true
+panel-element-positions='{"0":[{"element":"showAppsButton","visible":$SHOWAPPS,"position":"centerMonitor"},{"element":"activitiesButton","visible":false,"position":"stackedTL"},{"element":"leftBox","visible":$LEFTBOX,"position":"centerMonitor"},{"element":"taskbar","visible":true,"position":"centerMonitor"},{"element":"centerBox","visible":false,"position":"stackedBR"},{"element":"rightBox","visible":true,"position":"stackedBR"},{"element":"systemMenu","visible":true,"position":"stackedBR"},{"element":"dateMenu","visible":true,"position":"stackedBR"},{"element":"desktopButton","visible":false,"position":"stackedBR"}]}'
+stockgs-keep-top-panel=false
+trans-use-custom-bg=true
+trans-bg-color='#1d1b20'
+trans-use-custom-opacity=true
+trans-panel-opacity=0.62
+trans-use-dynamic-opacity=false
+appicon-margin=4
+appicon-padding=6
+show-favorites=true
+show-window-previews=true
+group-apps=true
+isolate-workspaces=false
+intellihide=false
+hide-overview-on-startup=true
+show-showdesktop-hover=false
+animate-appicon-hover=true
+show-apps-icon-file='/usr/share/atherium/start-icon.png'
+
+EOF
+    fi
+    if [ "$ARC_OK" = 1 ]; then
+        cat <<EOF
+[org/gnome/shell/extensions/arcmenu]
+menu-button-icon='Custom_Icon'
+custom-menu-button-icon='/usr/share/atherium/start-icon.png'
+EOF
+        grep -q 'name="menu-button-appearance"' "$SCH" && echo "menu-button-appearance='Icon'"
+        grep -q 'name="custom-menu-button-icon-size"' "$SCH" && echo "custom-menu-button-icon-size=34.0"
+        if grep -q 'name="menu-layout"' "$SCH" && grep -q 'Eleven' "$SCH"; then echo "menu-layout='Eleven'"; fi
+        echo
+    fi
+    if [ "$BLUR_OK" = 1 ]; then
+        cat <<EOF
+[org/gnome/shell/extensions/blur-my-shell/applications]
+blur=true
+enable-all=true
+opacity=235
+
+[org/gnome/shell/extensions/blur-my-shell/panel]
+blur=true
+EOF
+    fi
+} > /etc/dconf/db/local.d/10-atherium-shell
 
 mkdir -p /usr/share/icons/default
 printf '[Icon Theme]\nInherits=%s\n' "$CURSOR_THEME" > /usr/share/icons/default/index.theme
 
-# ---- dconf: valores por defecto del sistema y pantalla de inicio de sesion (GDM) ----
+# ============================ 7) Pantalla de inicio de sesion (GDM) distinta ============================
 mkdir -p /etc/dconf/profile /etc/dconf/db/gdm.d
 printf 'user-db:user\nsystem-db:local\n' > /etc/dconf/profile/user
 cat > /etc/dconf/db/gdm.d/00-atherium <<EOF
@@ -115,10 +267,70 @@ disable-user-list=false
 icon-theme='Atherium'
 cursor-theme='$CURSOR_THEME'
 color-scheme='prefer-dark'
+font-name='Roboto 11'
 EOF
+
+build_gdm_theme() {
+    command -v gresource >/dev/null 2>&1 || return 1
+    command -v glib-compile-resources >/dev/null 2>&1 || return 1
+    ALT=""
+    for a in gdm-theme.gresource gdm3-theme.gresource; do
+        if update-alternatives --query "$a" >/dev/null 2>&1; then ALT="$a"; break; fi
+    done
+    [ -n "$ALT" ] || return 1
+    SRC="$(readlink -f "/usr/share/gnome-shell/$ALT")"
+    [ -f "$SRC" ] || return 1
+    TH="$(mktemp -d)"
+    for r in $(gresource list "$SRC"); do
+        rel="${r#/org/gnome/shell/theme/}"
+        [ "$rel" != "$r" ] || return 1
+        mkdir -p "$TH/$(dirname "$rel")"
+        gresource extract "$SRC" "$r" > "$TH/$rel"
+    done
+    DONE=0
+    for css in gdm.css gdm3.css; do
+        if [ -f "$TH/$css" ]; then
+            cat >> "$TH/$css" <<'EOF'
+
+/* Atherium: fondo propio de la pantalla de inicio de sesion */
+#lockDialogGroup {
+    background: #141218 url(file:///usr/share/backgrounds/atherium/login.png);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+EOF
+            DONE=1
+        fi
+    done
+    [ "$DONE" = 1 ] || return 1
+    {
+        echo '<?xml version="1.0" encoding="UTF-8"?>'
+        echo '<gresources><gresource prefix="/org/gnome/shell/theme">'
+        (cd "$TH" && find . -type f ! -name '*.xml' ! -name '*.gresource' | sed 's#^\./##; s#.*#<file>&</file>#')
+        echo '</gresource></gresources>'
+    } > "$TH/theme.gresource.xml"
+    (cd "$TH" && glib-compile-resources --sourcedir="$TH" --target="$TH/atherium.gresource" theme.gresource.xml) || return 1
+    gresource list "$TH/atherium.gresource" | grep -q 'gdm' || return 1
+    install -m 644 "$TH/atherium.gresource" /usr/share/gnome-shell/atherium-gdm.gresource
+    update-alternatives --install "/usr/share/gnome-shell/$ALT" "$ALT" /usr/share/gnome-shell/atherium-gdm.gresource 900
+    update-alternatives --set "$ALT" /usr/share/gnome-shell/atherium-gdm.gresource
+    rm -rf "$TH"
+    return 0
+}
+if build_gdm_theme; then echo "GDM: tema de inicio de sesion Atherium instalado"; else
+    echo "AVISO: no se pudo personalizar GDM, se usa su tema por defecto" >&2
+fi
+
 dconf update || true
 
-# ---- Shell: neofetch al abrir una terminal interactiva ----
+# ============================ 8) Splash de arranque (Plymouth) ============================
+if command -v plymouth-set-default-theme >/dev/null 2>&1 && [ -f /usr/share/plymouth/themes/atherium/atherium.plymouth ]; then
+    plymouth-set-default-theme -R atherium >/dev/null 2>&1 \
+        || echo "AVISO: no se pudo activar el splash de Plymouth" >&2
+fi
+
+# ============================ 9) Shell, identidad ============================
 cat >> /etc/skel/.bashrc <<'EOF'
 
 # Atherium: mostrar el logo al abrir la terminal
@@ -129,7 +341,7 @@ fi
 alias ll='ls -lah --color=auto'
 EOF
 
-# ---- Identidad del sistema: Atherium (al final, para no confundir a las herramientas de apt) ----
+# Identidad al final, para no confundir a las herramientas de apt
 cat > /etc/os-release <<'EOF'
 PRETTY_NAME="Atherium"
 NAME="Atherium"
@@ -145,6 +357,5 @@ BUG_REPORT_URL="https://github.com/AkaV1/Atherium"
 EOF
 echo "Atherium 1.0 \\n \\l" > /etc/issue
 echo "Atherium 1.0" > /etc/issue.net
-# lsb-release se deja con el codename "noble" (lo usan add-apt-repository y otras herramientas)
-sed -i 's/^DISTRIB_DESCRIPTION=.*/DISTRIB_DESCRIPTION="Atherium 1.0 (Ubuntu 24.04)"/' /etc/lsb-release 2>/dev/null || true
+sed -i 's/^DISTRIB_DESCRIPTION=.*/DISTRIB_DESCRIPTION="Atherium 1.0"/' /etc/lsb-release 2>/dev/null || true
 echo "atherium" > /etc/hostname

@@ -1,10 +1,8 @@
-# --- Escritorio GNOME (sin meta-paquetes de Ubuntu que arrastran snap) ---
-ubuntu-session
+# --- Escritorio GNOME (sin ubuntu-session ni meta-paquetes de Ubuntu) ---
 gdm3
 gnome-shell
 gnome-shell-extensions
 gnome-shell-extension-prefs
-gnome-shell-extension-ubuntu-dock
 gnome-session
 gnome-control-center
 gnome-tweaks
@@ -20,26 +18,26 @@ file-roller
 gvfs-backends
 dconf-cli
 xdg-user-dirs-gtk
+xdg-desktop-portal-gnome
 
-# --- Arranque live e instalador ---
+# --- Arranque live, splash e instalador ---
 live-boot
 live-config
+plymouth
 calamares
 calamares-settings-debian
 
-# --- Tema, iconos y fuentes (Yaru queda como respaldo de WhiteSur) ---
-yaru-theme-gtk
-yaru-theme-icon
-yaru-theme-gnome-shell
+# --- Fuentes (estilo Material) y respaldo de tema ---
+fonts-roboto
 fonts-noto
 fonts-noto-color-emoji
 fonts-firacode
-fonts-inter
+adwaita-icon-theme
+gnome-themes-extra
 
-# --- Dependencias para instalar WhiteSur desde GitHub ---
+# --- Herramientas para instalar temas y extensiones desde GitHub ---
 sassc
 gtk2-engines-murrine
-gnome-themes-extra
 libglib2.0-dev-bin
 libxml2-utils
 git
@@ -47,8 +45,15 @@ curl
 ca-certificates
 software-properties-common
 gnupg
+make
+gettext
+zip
+unzip
 
-# --- Terminal / neofetch ---
+# --- Optimizacion ---
+systemd-zram-generator
+
+# --- Terminal ---
 neofetch
 bash-completion
 htop
