@@ -1,0 +1,28 @@
+#!/bin/sh
+# Cambia la barra entre "centrada" (Windows 11) e "izquierda" (Windows 10).
+# Uso: atherium-taskbar-style [center|left]   (sin argumentos abre un selector)
+SCHEMA=org.gnome.shell.extensions.dash-to-panel
+KEY=panel-element-positions
+
+CENTER='{"0":[{"element":"showAppsButton","visible":true,"position":"centerMonitor"},{"element":"activitiesButton","visible":false,"position":"stackedTL"},{"element":"leftBox","visible":false,"position":"centerMonitor"},{"element":"taskbar","visible":true,"position":"centerMonitor"},{"element":"centerBox","visible":false,"position":"stackedBR"},{"element":"rightBox","visible":true,"position":"stackedBR"},{"element":"systemMenu","visible":true,"position":"stackedBR"},{"element":"dateMenu","visible":true,"position":"stackedBR"},{"element":"desktopButton","visible":false,"position":"stackedBR"}]}'
+LEFT='{"0":[{"element":"showAppsButton","visible":true,"position":"stackedTL"},{"element":"activitiesButton","visible":false,"position":"stackedTL"},{"element":"leftBox","visible":false,"position":"stackedTL"},{"element":"taskbar","visible":true,"position":"stackedTL"},{"element":"centerBox","visible":false,"position":"stackedBR"},{"element":"rightBox","visible":true,"position":"stackedBR"},{"element":"systemMenu","visible":true,"position":"stackedBR"},{"element":"dateMenu","visible":true,"position":"stackedBR"},{"element":"desktopButton","visible":false,"position":"stackedBR"}]}'
+
+choice="$1"
+if [ -z "$choice" ]; then
+    pick="$(zenity --list --radiolist --title="Estilo de la barra" \
+        --text="Elige dónde van los iconos de la barra inferior:" \
+        --column="" --column="Estilo" \
+        TRUE "Centrada (como Windows 11)" FALSE "A la izquierda (como Windows 10)" \
+        --width=440 --height=280 2>/dev/null)" || exit 0
+    case "$pick" in
+        Centrada*) choice=center ;;
+        A\ la*)    choice=left ;;
+        *) exit 0 ;;
+    esac
+fi
+
+case "$choice" in
+    center) gsettings set "$SCHEMA" "$KEY" "$CENTER" ;;
+    left)   gsettings set "$SCHEMA" "$KEY" "$LEFT" ;;
+    *) echo "Uso: $0 [center|left]" >&2; exit 1 ;;
+esac

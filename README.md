@@ -42,3 +42,12 @@ qemu-system-x86_64 -m 4G -enable-kvm -cdrom atherium-*.iso -boot d
 | Icono de inicio | `.../usr/share/atherium/start-icon.png` |
 | Usuario live | `.../etc/live/config.conf.d/atherium.conf` |
 | Fondos | `.../usr/share/backgrounds/atherium/` |
+
+## Novedades
+
+- Fondo por defecto "Atherium Linux", animaciones de GNOME y Dash to Panel más fluidas, scroll suave en Firefox.
+- Internet listo: NetworkManager (wifi/ethernet), firmware, bluetooth.
+- Tienda **Bazaar** (Flatpak/Flathub) preinstalada; si no cabe en la imagen se instala en el primer arranque con internet.
+- **Estilo de la barra**: app "Estilo de la barra" (o `atherium-taskbar-style center|left`) para centrada tipo Windows 11 o a la izquierda tipo Windows 10.
+- **Rendimiento**: monitor de CPU, RAM, disco y red (`atherium-rendimiento`).
+- **Instalador propio** "Instalar Atherium" (Calamares con marca y colores de Atherium).

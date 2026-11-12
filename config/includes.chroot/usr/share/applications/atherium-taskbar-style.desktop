@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Estilo de la barra
+Comment=Barra centrada (Windows 11) o a la izquierda (Windows 10)
+Exec=atherium-taskbar-style
+Icon=preferences-desktop-wallpaper
+Terminal=false
+Categories=Settings;DesktopSettings;
+Keywords=barra;panel;taskbar;windows;inicio;

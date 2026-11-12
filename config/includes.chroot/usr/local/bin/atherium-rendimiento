@@ -1,0 +1,144 @@
+#!/usr/bin/python3
+# Monitor de rendimiento de Atherium (GTK4 + libadwaita + psutil)
+import collections, time
+import gi
+gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
+from gi.repository import Gtk, Adw, GLib
+import psutil
+
+N = 60
+COL = {"cpu": (0.82, 0.74, 1.0), "ram": (0.94, 0.72, 0.78), "disk": (0.66, 0.85, 0.71), "net": (0.5, 0.87, 0.92)}
+
+
+def fmt_bytes(n):
+    for u in ("B", "KB", "MB", "GB", "TB"):
+        if n < 1024:
+            return f"{n:.1f} {u}"
+        n /= 1024
+    return f"{n:.1f} PB"
+
+
+class Graph(Gtk.DrawingArea):
+    def __init__(self, color, fixed_max=100.0):
+        super().__init__()
+        self.color, self.fixed_max = color, fixed_max
+        self.data = collections.deque([0.0] * N, maxlen=N)
+        self.set_content_height(90)
+        self.set_hexpand(True)
+        self.set_draw_func(self._draw)
+
+    def push(self, v):
+        self.data.append(v)
+        self.queue_draw()
+
+    def _draw(self, area, cr, w, h):
+        mx = self.fixed_max or max(max(self.data), 1.0)
+        r, g, b = self.color
+        cr.set_source_rgba(1, 1, 1, 0.05)
+        cr.rectangle(0, 0, w, h)
+        cr.fill()
+        pts = [(i * w / (N - 1), h - (v / mx) * (h - 4) - 2) for i, v in enumerate(self.data)]
+        cr.move_to(0, h)
+        for x, y in pts:
+            cr.line_to(x, y)
+        cr.line_to(w, h)
+        cr.close_path()
+        cr.set_source_rgba(r, g, b, 0.25)
+        cr.fill()
+        cr.move_to(*pts[0])
+        for x, y in pts[1:]:
+            cr.line_to(x, y)
+        cr.set_source_rgba(r, g, b, 1)
+        cr.set_line_width(2)
+        cr.stroke()
+
+
+class Card(Gtk.Box):
+    def __init__(self, title, color, fixed_max=100.0):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.add_css_class("card")
+        for m in ("top", "bottom", "start", "end"):
+            getattr(self, f"set_margin_{m}")(6)
+        head = Gtk.Box(spacing=8)
+        t = Gtk.Label(label=title, xalign=0, hexpand=True)
+        t.add_css_class("heading")
+        self.value = Gtk.Label(label="--", xalign=1)
+        self.value.add_css_class("title-3")
+        head.append(t)
+        head.append(self.value)
+        self.sub = Gtk.Label(label="", xalign=0)
+        self.sub.add_css_class("dim-label")
+        self.graph = Graph(color, fixed_max)
+        for w in (head, self.graph, self.sub):
+            self.append(w)
+        for m in ("top", "bottom", "start", "end"):
+            getattr(head, f"set_margin_{m}")(8)
+        self.sub.set_margin_start(8)
+        self.sub.set_margin_bottom(8)
+
+
+class Win(Adw.ApplicationWindow):
+    def __init__(self, app):
+        super().__init__(application=app, title="Rendimiento")
+        self.set_default_size(720, 760)
+        self.cpu = Card("Procesador", COL["cpu"])
+        self.ram = Card("Memoria", COL["ram"])
+        self.disk = Card("Disco (lectura + escritura)", COL["disk"], fixed_max=None)
+        self.net = Card("Red (bajada + subida)", COL["net"], fixed_max=None)
+        grid = Gtk.Grid(column_spacing=6, row_spacing=6, column_homogeneous=True, margin_top=8, margin_bottom=12, margin_start=12, margin_end=12)
+        grid.attach(self.cpu, 0, 0, 1, 1)
+        grid.attach(self.ram, 1, 0, 1, 1)
+        grid.attach(self.disk, 0, 1, 1, 1)
+        grid.attach(self.net, 1, 1, 1, 1)
+        self.info = Gtk.Label(xalign=0, margin_start=18, margin_bottom=12)
+        self.info.add_css_class("dim-label")
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        box.append(Adw.HeaderBar())
+        box.append(grid)
+        box.append(self.info)
+        self.set_content(box)
+        psutil.cpu_percent(None)
+        self.last_io = (psutil.disk_io_counters(), psutil.net_io_counters(), time.time())
+        GLib.timeout_add(1000, self.tick)
+        self.tick()
+
+    def tick(self):
+        cpu = psutil.cpu_percent(None)
+        freq = psutil.cpu_freq()
+        self.cpu.value.set_label(f"{cpu:.0f} %")
+        self.cpu.graph.push(cpu)
+        self.cpu.sub.set_label(f"{psutil.cpu_count()} hilos" + (f" · {freq.current / 1000:.2f} GHz" if freq else ""))
+        vm = psutil.virtual_memory()
+        self.ram.value.set_label(f"{vm.percent:.0f} %")
+        self.ram.graph.push(vm.percent)
+        self.ram.sub.set_label(f"{fmt_bytes(vm.used)} de {fmt_bytes(vm.total)}")
+        d, n, t0 = self.last_io
+        d2, n2, t1 = psutil.disk_io_counters(), psutil.net_io_counters(), time.time()
+        dt = max(t1 - t0, 0.001)
+        if d and d2:
+            rd, wr = (d2.read_bytes - d.read_bytes) / dt, (d2.write_bytes - d.write_bytes) / dt
+            self.disk.value.set_label(fmt_bytes(rd + wr) + "/s")
+            self.disk.graph.push(rd + wr)
+            self.disk.sub.set_label(f"Lectura {fmt_bytes(rd)}/s · Escritura {fmt_bytes(wr)}/s")
+        dn, up = (n2.bytes_recv - n.bytes_recv) / dt, (n2.bytes_sent - n.bytes_sent) / dt
+        self.net.value.set_label(fmt_bytes(dn + up) + "/s")
+        self.net.graph.push(dn + up)
+        self.net.sub.set_label(f"Bajada {fmt_bytes(dn)}/s · Subida {fmt_bytes(up)}/s")
+        self.last_io = (d2, n2, t1)
+        du = psutil.disk_usage("/")
+        up_s = int(time.time() - psutil.boot_time())
+        self.info.set_label(f"Almacenamiento: {fmt_bytes(du.used)} de {fmt_bytes(du.total)} · Encendido hace {up_s // 3600} h {up_s % 3600 // 60} min")
+        return True
+
+
+class App(Adw.Application):
+    def __init__(self):
+        super().__init__(application_id="org.atherium.Rendimiento")
+
+    def do_activate(self):
+        (self.props.active_window or Win(self)).present()
+
+
+if __name__ == "__main__":
+    App().run(None)

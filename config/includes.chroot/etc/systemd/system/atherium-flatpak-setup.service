@@ -1,0 +1,15 @@
+[Unit]
+Description=Instalar tienda Bazaar (Flatpak)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=!/var/lib/flatpak/app/io.github.kolunmi.Bazaar
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/atherium-flatpak-setup
+Restart=on-failure
+RestartSec=60
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Rendimiento
+Comment=Uso de CPU, memoria, disco y red en tiempo real
+Exec=atherium-rendimiento
+Icon=utilities-system-monitor
+Terminal=false
+Categories=System;Monitor;
+Keywords=rendimiento;cpu;ram;monitor;

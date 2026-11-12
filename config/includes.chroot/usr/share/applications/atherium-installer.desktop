@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Instalar Atherium
+Comment=Instala Atherium en tu computadora
+Exec=sh -c "if command -v calamares_polkit >/dev/null 2>&1; then exec calamares_polkit; else exec sudo -E calamares; fi"
+Icon=/usr/share/atherium/start-icon.png
+Terminal=false
+Categories=System;
+StartupNotify=true
+Keywords=instalar;atherium;instalador;

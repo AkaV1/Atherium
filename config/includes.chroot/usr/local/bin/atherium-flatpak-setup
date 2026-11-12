@@ -1,0 +1,5 @@
+#!/bin/sh
+# Instala la tienda Bazaar si aun no esta (se usa en el primer arranque con internet)
+flatpak remote-add --system --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo || exit 1
+flatpak info --system io.github.kolunmi.Bazaar >/dev/null 2>&1 && exit 0
+flatpak install --system -y --noninteractive flathub io.github.kolunmi.Bazaar

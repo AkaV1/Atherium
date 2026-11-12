@@ -1,0 +1,53 @@
+#!/bin/bash
+# Internet, tienda Bazaar (Flatpak) e instalador propio de Atherium
+set +e
+
+# ---- Red ----
+systemctl enable NetworkManager NetworkManager-wait-online.service bluetooth ModemManager >/dev/null 2>&1
+systemctl disable systemd-networkd systemd-networkd-wait-online >/dev/null 2>&1
+systemctl enable atherium-flatpak-setup.service >/dev/null 2>&1
+
+# ---- Flatpak + Bazaar ----
+if command -v flatpak >/dev/null 2>&1; then
+    flatpak remote-add --system --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo \
+        || echo "AVISO: no se pudo anadir Flathub" >&2
+    if timeout 900 flatpak install --system -y --noninteractive flathub io.github.kolunmi.Bazaar; then
+        echo "Bazaar instalado en la imagen"
+    else
+        echo "AVISO: Bazaar no se pudo preinstalar; se instalara en el primer arranque con internet" >&2
+    fi
+fi
+
+# ---- Calamares: marca Atherium ----
+SRC=""
+for d in /etc/calamares/branding/debian /usr/share/calamares/branding/debian /usr/share/calamares/branding/default; do
+    [ -d "$d" ] && SRC="$d" && break
+done
+if [ -n "$SRC" ]; then
+    DST=/usr/share/calamares/branding/atherium
+    mkdir -p "$DST" && cp -a "$SRC"/. "$DST"/
+    cp /usr/share/atherium/start-icon.png "$DST/logo.png"
+    cp /usr/share/atherium/start-icon.png "$DST/icon.png"
+    cp /usr/share/atherium/calamares/show.qml "$DST/show.qml"
+    [ -f "$DST/branding.desc" ] && sed -i \
+        -e 's/Debian GNU\/Linux/Atherium/g; s/Debian/Atherium/g; s/debian/atherium/g' \
+        -e 's/^\( *productLogo:\).*/\1 "logo.png"/; s/^\( *productIcon:\).*/\1 "icon.png"/' \
+        -e 's/^\( *productWelcome:\).*/\1 "welcome.png"/' "$DST/branding.desc"
+    if [ -f "$DST/branding.desc" ]; then
+        # colores Material You
+        sed -i -e 's/^\( *sidebarBackground:\).*/\1 "#1d1b20"/; s/^\( *sidebarText:\).*/\1 "#e6e0e9"/; s/^\( *sidebarTextSelect:\).*/\1 "#d0bcff"/; s/^\( *sidebarTextHighlight:\).*/\1 "#6750a4"/' "$DST/branding.desc"
+    fi
+    for s in /etc/calamares/settings.conf /usr/share/calamares/settings.conf; do
+        [ -f "$s" ] && sed -i 's/^branding:.*/branding: atherium/' "$s"
+    done
+    echo "Calamares: branding atherium creado desde $SRC"
+else
+    echo "AVISO: no se encontro branding base de Calamares" >&2
+fi
+for f in /etc/calamares/modules/removeuser.conf; do
+    [ -f "$f" ] && sed -i 's/^username:.*/username: usuario1/' "$f"
+done
+[ -f /etc/calamares/modules/bootloader.conf ] && sed -i 's/^efiBootloaderId:.*/efiBootloaderId: "atherium"/' /etc/calamares/modules/bootloader.conf
+# ocultar el lanzador generico para que solo se vea "Instalar Atherium"
+[ -f /usr/share/applications/calamares.desktop ] && echo "NoDisplay=true" >> /usr/share/applications/calamares.desktop
+exit 0

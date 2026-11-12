@@ -93,3 +93,44 @@ libreoffice-help-es
 # --- Utilidades ---
 gparted
 udisks2
+
+# --- Internet: wifi, ethernet, bluetooth, firmware ---
+linux-firmware
+wpasupplicant
+wireless-regdb
+wireless-tools
+iw
+rfkill
+bluez
+modemmanager
+usb-modeswitch
+spice-vdagent
+iputils-ping
+dnsutils
+netplan.io
+
+# --- Tienda de apps (Bazaar via Flatpak) ---
+flatpak
+xdg-desktop-portal-gtk
+
+# --- Selector de barra y monitor de rendimiento ---
+zenity
+python3-gi
+python3-gi-cairo
+python3-psutil
+gir1.2-gtk-4.0
+gir1.2-adw-1
+
+# --- Instalador: bootloader y particionado ---
+grub-pc-bin
+grub-efi-amd64-bin
+grub-efi-amd64-signed
+shim-signed
+os-prober
+efibootmgr
+lvm2
+cryptsetup
+btrfs-progs
+dosfstools
+e2fsprogs
+ntfs-3g

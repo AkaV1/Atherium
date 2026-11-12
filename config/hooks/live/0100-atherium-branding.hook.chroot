@@ -224,6 +224,9 @@ intellihide=false
 hide-overview-on-startup=true
 show-showdesktop-hover=false
 animate-appicon-hover=true
+animate-window-launch=true
+animate-app-switch=true
+window-preview-animation-time=160
 show-apps-icon-file='/usr/share/atherium/start-icon.png'
 
 EOF
