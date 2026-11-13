@@ -44,6 +44,33 @@ if [ -n "$SRC" ]; then
 else
     echo "AVISO: no se encontro branding base de Calamares" >&2
 fi
+# estilo del instalador: hoja de estilos, imagen de bienvenida y ajustes de ventana
+if [ -d /usr/share/calamares/branding/atherium ]; then
+    D=/usr/share/calamares/branding/atherium
+    cp /usr/share/atherium/calamares/stylesheet.qss "$D/stylesheet.qss"
+    cp /usr/share/atherium/calamares/welcome.png "$D/welcome.png"
+    if [ -f "$D/branding.desc" ] && ! grep -q '^stylesheet:' "$D/branding.desc"; then
+        sed -i '/^componentName:/a stylesheet: "stylesheet.qss"' "$D/branding.desc"
+    fi
+    [ -f "$D/branding.desc" ] && grep -q 'stylesheet' "$D/branding.desc" || echo "AVISO: stylesheet no aplicado a Calamares" >&2
+fi
+
+# ---- Android: Waydroid (repositorio oficial) ----
+if curl -fsSL --retry 3 https://repo.waydro.id/waydroid.gpg -o /usr/share/keyrings/waydroid.gpg; then
+    echo "deb [signed-by=/usr/share/keyrings/waydroid.gpg] https://repo.waydro.id/ noble main" > /etc/apt/sources.list.d/waydroid.list
+    apt-get update -qq >/dev/null 2>&1
+    if apt-get install -y --no-install-recommends waydroid sqlite3 xdg-utils >/dev/null 2>&1; then
+        systemctl disable waydroid-container >/dev/null 2>&1
+        echo "Waydroid instalado"
+    else
+        echo "AVISO: no se pudo instalar waydroid" >&2
+    fi
+    rm -f /etc/apt/sources.list.d/waydroid.list   # no dejar repos externos en el sistema final
+else
+    echo "AVISO: repo de Waydroid inalcanzable, sin soporte de Android" >&2
+fi
+[ -x /usr/bin/waydroid ] || rm -f /usr/share/applications/atherium-android.desktop
+
 for f in /etc/calamares/modules/removeuser.conf; do
     [ -f "$f" ] && sed -i 's/^username:.*/username: usuario1/' "$f"
 done

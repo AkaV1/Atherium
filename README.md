@@ -51,3 +51,10 @@ qemu-system-x86_64 -m 4G -enable-kvm -cdrom atherium-*.iso -boot d
 - **Estilo de la barra**: app "Estilo de la barra" (o `atherium-taskbar-style center|left`) para centrada tipo Windows 11 o a la izquierda tipo Windows 10.
 - **Rendimiento**: monitor de CPU, RAM, disco y red (`atherium-rendimiento`).
 - **Instalador propio** "Instalar Atherium" (Calamares con marca y colores de Atherium).
+
+## Android, widgets e instalador
+
+- **Android + Play Store**: app «Android» (Waydroid). En el primer uso descarga Android con GAPPS (~1 GB); luego `atherium-android --register` ayuda a certificar el dispositivo para Play Store. No funciona en todas las máquinas virtuales.
+- **Widgets de escritorio**: reloj, fecha y medidores de CPU/RAM (extensión propia `atherium-widgets`).
+- **Animaciones**: ventanas elásticas y minimizar tipo lámpara mágica (compiz-windows-effect y magic-lamp).
+- **Instalador**: Calamares con hoja de estilos Material You, imagen de bienvenida y presentación propia.

@@ -179,6 +179,11 @@ if install_ego "blur-my-shell@aunetx"; then BLUR_OK=1; else
     rm -rf "$EXT_DIR/blur-my-shell@aunetx"
 fi
 
+# Efectos de ventana fluidos (ventanas elasticas al moverlas y minimizar tipo lampara magica)
+WOBBLY_OK=0; LAMP_OK=0
+install_ego "compiz-windows-effect@hermes83.github.com" && WOBBLY_OK=1 || { echo "AVISO: no se pudo instalar compiz-windows-effect" >&2; rm -rf "$EXT_DIR/compiz-windows-effect@hermes83.github.com"; }
+install_ego "compiz-alike-magic-lamp-effect@hermes83.github.com" && LAMP_OK=1 || { echo "AVISO: no se pudo instalar magic-lamp" >&2; rm -rf "$EXT_DIR/compiz-alike-magic-lamp-effect@hermes83.github.com"; }
+
 glib-compile-schemas /usr/share/glib-2.0/schemas >/dev/null 2>&1 || true
 
 echo "Temas elegidos: gtk=$GTK_THEME shell=${SHELL_THEME:-defecto} iconos=Atherium(base $BASE_ICONS) cursor=$CURSOR_THEME navegador=$BROWSER_DESKTOP dtp=$DTP_OK arcmenu=$ARC_OK blur=$BLUR_OK"
@@ -191,6 +196,9 @@ EXTS="'user-theme@gnome-shell-extensions.gcampax.github.com'"
 [ "$DTP_OK" = 1 ]  && EXTS="$EXTS, 'dash-to-panel@jderose9.github.com'"
 [ "$ARC_OK" = 1 ]  && EXTS="$EXTS, '$ARC_UUID'"
 [ "$BLUR_OK" = 1 ] && EXTS="$EXTS, 'blur-my-shell@aunetx'"
+[ "$WOBBLY_OK" = 1 ] && EXTS="$EXTS, 'compiz-windows-effect@hermes83.github.com'"
+[ "$LAMP_OK" = 1 ] && EXTS="$EXTS, 'compiz-alike-magic-lamp-effect@hermes83.github.com'"
+EXTS="$EXTS, 'atherium-widgets@atherium.local'"
 
 {
     echo "[org/gnome/shell]"

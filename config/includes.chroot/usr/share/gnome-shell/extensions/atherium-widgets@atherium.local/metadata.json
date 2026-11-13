@@ -1,0 +1,7 @@
+{
+  "uuid": "atherium-widgets@atherium.local",
+  "name": "Atherium Widgets",
+  "description": "Widgets de escritorio: reloj, fecha y uso de CPU/RAM",
+  "shell-version": ["46"],
+  "version": 1
+}

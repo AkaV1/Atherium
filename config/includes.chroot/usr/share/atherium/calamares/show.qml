@@ -62,6 +62,28 @@ Presentation {
         }
     }
 
+    Slide {
+        Rectangle { anchors.fill: parent; color: "#1d1b20" }
+        Text {
+            anchors.centerIn: parent
+            horizontalAlignment: Text.AlignHCenter
+            text: "Android y Play Store\nEjecuta tus apps de Android\ndesde el menu \"Android\""
+            color: "#a8dab5"
+            font.pixelSize: 24
+        }
+    }
+
+    Slide {
+        Rectangle { anchors.fill: parent; color: "#1d1b20" }
+        Text {
+            anchors.centerIn: parent
+            horizontalAlignment: Text.AlignHCenter
+            text: "Widgets en tu escritorio\nReloj, fecha y rendimiento\nsiempre a la vista"
+            color: "#80deea"
+            font.pixelSize: 24
+        }
+    }
+
     function onActivate() { }
     function onLeave() { }
 }

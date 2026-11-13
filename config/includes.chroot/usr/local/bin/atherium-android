@@ -1,0 +1,27 @@
+#!/bin/sh
+# Android en Atherium (Waydroid). Primer uso: descarga Android con Play Store.
+# Uso: atherium-android            abre Android
+#      atherium-android --register  muestra el ID para certificar Play Store
+if ! command -v waydroid >/dev/null 2>&1; then
+    zenity --error --text="Waydroid no está instalado en esta imagen." ; exit 1
+fi
+if [ "$1" = "--register" ]; then
+    ID="$(pkexec waydroid shell -- sh -c 'ANDROID_RUNTIME_ROOT=/apex/com.android.runtime ANDROID_DATA=/data ANDROID_ROOT=/system sqlite3 /data/data/com.google.android.gsf/databases/gservices.db "select value from main where name = \"android_id\";"' 2>/dev/null)"
+    zenity --info --width=460 --text="Tu ID de Android:\n\n<b>$ID</b>\n\nSe abrirá la página de Google: pega el ID, registra el dispositivo, espera unos minutos y reinicia Android." 2>/dev/null
+    xdg-open https://www.google.com/android/uncertified >/dev/null 2>&1 &
+    exit 0
+fi
+if [ ! -f /var/lib/waydroid/images/system.img ]; then
+    zenity --question --width=460 --title="Android en Atherium" \
+        --text="Se descargará Android con Google Play Store (aprox. 1 GB) y se configurará. Necesitas internet.\n\n¿Continuar?" || exit 0
+    ( pkexec sh -c 'waydroid init -s GAPPS -f && systemctl enable --now waydroid-container' 2>&1 ) \
+        | zenity --progress --pulsate --auto-close --no-cancel --title="Instalando Android" --text="Descargando y configurando Android..." 2>/dev/null
+    if [ ! -f /var/lib/waydroid/images/system.img ]; then
+        zenity --error --text="No se pudo instalar Android. Revisa tu internet e inténtalo de nuevo.\n\nNota: Waydroid no funciona en todas las máquinas virtuales."; exit 1
+    fi
+    zenity --info --width=460 --text="Android instalado.\n\nPara usar Play Store certifica tu dispositivo: abre de nuevo «Android» → ejecuta «atherium-android --register» desde la terminal." 2>/dev/null
+fi
+pkexec systemctl start waydroid-container 2>/dev/null
+waydroid session start >/dev/null 2>&1 &
+sleep 4
+exec waydroid show-full-ui

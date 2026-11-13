@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Android
+Comment=Apps de Android y Google Play Store
+Exec=atherium-android
+Icon=phone
+Terminal=false
+Categories=System;Utility;
+Keywords=android;play store;apk;apps;
